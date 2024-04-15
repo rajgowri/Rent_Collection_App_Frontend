@@ -12,9 +12,12 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
+import 'package:rent_collection_app/Services/ShopApiService.dart';
+import 'package:rent_collection_app/Services/VenderApiService.dart';
 
 class AddPage extends StatefulWidget {
-  const AddPage({Key? key}) : super(key: key);
+
+  const AddPage({super.key});
 
   @override
   State<AddPage> createState() => _AddPageState();
@@ -24,12 +27,133 @@ class _AddPageState extends State<AddPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  String? documentFilePath;
+  final TextEditingController _mobileNumber = TextEditingController();
+  final TextEditingController _firstName = TextEditingController();
+  final TextEditingController _lastName = TextEditingController();
+  final TextEditingController _temporaryAddress = TextEditingController();
+  final TextEditingController _permanentAddress = TextEditingController();
+  final TextEditingController _city = TextEditingController();
+  String? _selectedState;
+  final TextEditingController _pinCode = TextEditingController();
+  final TextEditingController _emergencyContactNumber = TextEditingController();
+  final TextEditingController _shopIdController = TextEditingController();
+  final TextEditingController _totalAsset = TextEditingController();
+  final TextEditingController _assetList = TextEditingController();
+  final TextEditingController _depositAmount = TextEditingController();
+  final TextEditingController _assetRentAmount = TextEditingController();
+  String? _selectedPayment;
+  final TextEditingController _paymentReferenceId = TextEditingController();
+  final TextEditingController _leaseStartDate = TextEditingController();
+  final TextEditingController _leaseEndDate = TextEditingController();
+  bool showSuccessMessage = false;
+
+  List<String> shopIds = [];
+
+  Future<void> fetchShopIds() async {
+    try {
+      shopIds = await ShopApiService().fetchShopIds();
+      setState(() {});
+    } catch (error) {
+      print("Failed to fetch shop IDs: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to fetch shop IDs: $error"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> addVender() async {
+    final String mobileNumber = _mobileNumber.text;
+    final String firstName = _firstName.text;
+    final String lastName = _lastName.text;
+    final String temporaryAddress = _temporaryAddress.text;
+    final String permanentAddress = _permanentAddress.text;
+    final String city = _city.text;
+    final String selectedState = _selectedState!;
+    final String pinCode = _pinCode.text;
+    final String emergencyContactNumber = _emergencyContactNumber.text;
+    final String shopId = _shopIdController.text;
+    final String totalAsset = _totalAsset.text;
+    final String assetListString = _assetList.text;
+    final List<String> assetList = assetListString.split(',');
+    final String depositeAmount = _depositAmount.text;
+    final String assetRentAmount = _assetRentAmount.text;
+    final String payment = _selectedPayment!;
+    final String paymentReferenceId = _paymentReferenceId.text;
+    final String leaseStartDate = _leaseStartDate.text;
+    final String leaseEndDate = _leaseEndDate.text;
+
+
+    try {
+      final response = await VenderApiService().addVender(
+        mobileNumber,
+        firstName,
+        lastName,
+        temporaryAddress,
+        permanentAddress,
+        city,
+        selectedState,
+        pinCode,
+        emergencyContactNumber,
+        shopId,
+        totalAsset,
+        assetList,
+        depositeAmount,
+        assetRentAmount,
+        payment,
+        paymentReferenceId,
+        leaseStartDate,
+        leaseEndDate,
+      );
+
+      if (response['success']) {
+        setState(() {
+          showSuccessMessage = true;
+          print(response['message']);
+          _mobileNumber.clear();
+          _firstName.clear();
+          _lastName.clear();
+          _temporaryAddress.clear();
+          _permanentAddress.clear();
+          _city.clear();
+          _selectedState = null;
+          _pinCode.clear();
+          _emergencyContactNumber.clear();
+          _shopIdController.clear();
+          _totalAsset.clear();
+          _assetList.clear();
+          _depositAmount.clear();
+          _assetRentAmount.clear();
+          _paymentReferenceId.clear();
+          _leaseStartDate.clear();
+          _leaseEndDate.clear();
+        });
+        Navigator.pop(context, shopId);
+      } else {
+        print(response['message']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      print("Failed to add vendor: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Failed to add vendor: $error"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   DateTime? _startDate;
   DateTime? _endDate;
 
-  String? selectedState;
   List<String> states = [
     "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
     "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
@@ -38,17 +162,16 @@ class _AddPageState extends State<AddPage> {
     "Uttar Pradesh", "Uttarakhand", "West Bengal"
   ];
 
-  String? selectedPayment;
   List<String> payment = ["Cash", "Online"];
 
   @override
+  void initState() {
+    super.initState();
+    fetchShopIds();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<Map<String, dynamic>> data2 = [
-      {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add","Message"]},
-      {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
-      {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
-    ];
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
@@ -73,9 +196,9 @@ class _AddPageState extends State<AddPage> {
                 width: 60,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.teal.shade900
+                    elevation: 0,
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.teal.shade900,
                   ),
                   onPressed: (){
                     showModalBottomSheet(
@@ -88,7 +211,7 @@ class _AddPageState extends State<AddPage> {
                           children: [
                             AppBar(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10), // Adjust the value as needed
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               leading: Icon(Icons.account_circle, size: 40),
                               title: Text("Robert", style: TextStyle(fontSize: 20)),
@@ -100,9 +223,10 @@ class _AddPageState extends State<AddPage> {
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => ChangePswd())
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ChangePswd(),
+                                  ),
                                 );
                               },
                             ), ListTile(
@@ -111,9 +235,10 @@ class _AddPageState extends State<AddPage> {
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Profile())
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => Profile(),
+                                  ),
                                 );
                               },
                             ),
@@ -123,9 +248,10 @@ class _AddPageState extends State<AddPage> {
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => HomePage())
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => HomePage(),
+                                  ),
                                 );
                               },
                             ),
@@ -148,11 +274,11 @@ class _AddPageState extends State<AddPage> {
                 width: 300,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.teal.shade900,
-                      shape:RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5)
-                      )
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.teal.shade900,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.push(
@@ -165,8 +291,14 @@ class _AddPageState extends State<AddPage> {
               ),
               ListView.builder(
                 shrinkWrap: true,
-                itemCount: data2.length,
+                itemCount: 4,
                 itemBuilder: (context,index){
+                  List<Map<String, dynamic>> data2 = [
+                    {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
+                    {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add","Message"]},
+                    {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
+                    {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
+                  ];
                   return ListTile(
                     leading: data2[index]["leading"],
                     title: Text(data2[index]["title"]),
@@ -280,6 +412,7 @@ class _AddPageState extends State<AddPage> {
                               SizedBox(height: 10),
                               TextField(
                                 keyboardType: TextInputType.phone,
+                                controller: _mobileNumber,
                                 decoration: InputDecoration(
                                   labelText: "Mobile number",
                                   border: OutlineInputBorder(),
@@ -287,6 +420,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _firstName,
                                 decoration: InputDecoration(
                                   labelText: "First Name",
                                   border: OutlineInputBorder(),
@@ -294,6 +428,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _lastName,
                                 decoration: InputDecoration(
                                   labelText: "Last Name",
                                   border: OutlineInputBorder(),
@@ -301,6 +436,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _temporaryAddress,
                                 decoration: InputDecoration(
                                   labelText: "Temporary Address",
                                   border: OutlineInputBorder(),
@@ -308,6 +444,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _permanentAddress,
                                 decoration: InputDecoration(
                                   labelText: "Permanent Address",
                                   border: OutlineInputBorder(),
@@ -315,6 +452,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _city,
                                 decoration: InputDecoration(
                                   labelText: "City",
                                   border: OutlineInputBorder(),
@@ -324,7 +462,7 @@ class _AddPageState extends State<AddPage> {
                               Container(
                                 padding: EdgeInsets.all(1),
                                 child: DropdownButtonFormField<String>(
-                                  value: selectedState,
+                                  value: _selectedState,
                                   items: states.map((state) {
                                     return DropdownMenuItem<String>(
                                       value: state,
@@ -333,7 +471,7 @@ class _AddPageState extends State<AddPage> {
                                   }).toList(),
                                   onChanged: (newValue) {
                                     setState(() {
-                                      selectedState = newValue;
+                                      _selectedState = newValue;
                                     });
                                   },
                                   decoration: InputDecoration(
@@ -344,6 +482,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _pinCode,
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: "Pin Code",
@@ -352,6 +491,7 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
+                                controller: _emergencyContactNumber,
                                 keyboardType: TextInputType.phone,
                                 decoration: InputDecoration(
                                   labelText: "Emergency contact number",
@@ -374,105 +514,93 @@ class _AddPageState extends State<AddPage> {
                               SizedBox(height: 10),
                               Text("Shop and Asset Details", style: TextStyle(fontSize: 25)),
                               SizedBox(height: 20),
-                              TextField(
-                                decoration: InputDecoration(
-                                  labelText: "Shop Id",
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              SizedBox(height: 10,),
-                              TextField(
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                    labelText: "Total Asset",
-                                    border: OutlineInputBorder()
-                                ),
-                              ),
-                              SizedBox(height: 10,),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 1.0),
-                                child: TextField(
-                                  keyboardType: TextInputType.multiline,
-                                  maxLines: null, // Allows multiple lines
+                              Container(
+                                padding: EdgeInsets.all(1),
+                                child: DropdownButtonFormField<String>(
+                                  value: _shopIdController.text,
+                                  items: shopIds.map((shopId) {
+                                    return DropdownMenuItem<String>(
+                                      value: shopId,
+                                      child: Text(shopId),
+                                    );
+                                  }).toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      _shopIdController.text = newValue!;
+                                    });
+                                  },
                                   decoration: InputDecoration(
-                                    label: Text("Asset List"),
+                                    labelText: "Shop Id",
                                     border: OutlineInputBorder(),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.white
-                          ),
-                          padding: EdgeInsets.all(1),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 10,),
-                              Text("Rent and Deposit Details", style: TextStyle(fontSize: 25)),
-                              SizedBox(height: 20,),
+                              SizedBox(height: 10),
                               TextField(
+                                controller: _totalAsset,
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
-                                    labelText: "Deposit Amount",
-                                    border: OutlineInputBorder()
-                                ),
-                              ),
-                              SizedBox(height: 10,),
-                              TextField(
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                    labelText: "Asset Rent Amount",
-                                    border: OutlineInputBorder()
-                                ),
-                              ),
-                              SizedBox(height: 10,),
-                              DropdownButtonFormField<String>(
-                                value: selectedPayment,
-                                items: payment.map((state) {
-                                  return DropdownMenuItem<String>(
-                                    value: state,
-                                    child: Text(state),
-                                  );
-                                }).toList(),
-                                onChanged: (newValue) {
-                                  setState(() {
-                                    selectedPayment = newValue;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  labelText: "Payment channel",
+                                  labelText: "Total Asset",
                                   border: OutlineInputBorder(),
                                 ),
                               ),
-                              SizedBox(height: 10,),
+                              SizedBox(height: 10),
                               TextField(
+                                controller: _assetList,
                                 decoration: InputDecoration(
-                                    labelText: "Payment Reference id",
-                                    border: OutlineInputBorder()
+                                  labelText: "Asset List",
+                                  border: OutlineInputBorder(),
                                 ),
-                              )
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        Container(
-                          decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              color: Colors.white
-                          ),
-                          padding: EdgeInsets.all(1),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 10,),
-                              Text("Lease",style: TextStyle(fontSize: 25)),
-                              SizedBox(height: 20,),
+                              ),
+                              SizedBox(height: 10),
+                              TextField(
+                                controller: _depositAmount,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: "Deposit Amount",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              TextField(
+                                controller: _assetRentAmount,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: "Asset Rent Amount",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              Container(
+                                padding: EdgeInsets.all(1),
+                                child: DropdownButtonFormField<String>(
+                                  value: _selectedPayment,
+                                  items: payment.map((pay) {
+                                    return DropdownMenuItem<String>(
+                                      value: pay,
+                                      child: Text(pay),
+                                    );
+                                  }).toList(),
+                                  onChanged: (newValue) {
+                                    setState(() {
+                                      _selectedPayment = newValue;
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: "Payment Mode",
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              TextField(
+                                controller: _paymentReferenceId,
+                                decoration: InputDecoration(
+                                  labelText: "Payment reference ID",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              SizedBox(height: 10),
                               TextField(
                                 decoration: InputDecoration(
                                   labelText: "Lease Start Date",
@@ -489,6 +617,7 @@ class _AddPageState extends State<AddPage> {
                                       if (pickedDate != null && pickedDate != _startDate) {
                                         setState(() {
                                           _startDate = pickedDate;
+                                          _leaseStartDate.text = '${_startDate!.year}/${_startDate!.month}/${_startDate!.day}';
                                         });
                                       }
                                     },
@@ -497,7 +626,7 @@ class _AddPageState extends State<AddPage> {
                                 readOnly: true,
                                 controller: TextEditingController(
                                   text: _startDate != null
-                                      ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
+                                      ? '${_startDate!.year}/${_startDate!.month}/${_startDate!.day}'
                                       : '',
                                 ),
                               ),
@@ -518,6 +647,7 @@ class _AddPageState extends State<AddPage> {
                                       if (pickedDate != null && pickedDate != _endDate) {
                                         setState(() {
                                           _endDate = pickedDate;
+                                          _leaseEndDate.text = '${_endDate!.year}/${_endDate!.month}/${_endDate!.day}';
                                         });
                                       }
                                     },
@@ -526,7 +656,7 @@ class _AddPageState extends State<AddPage> {
                                 readOnly: true,
                                 controller: TextEditingController(
                                   text: _endDate != null
-                                      ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
+                                      ? '${_endDate!.year}/${_endDate!.month}/${_endDate!.day}'
                                       : '',
                                 ),
                               ),
@@ -542,7 +672,7 @@ class _AddPageState extends State<AddPage> {
                                               borderRadius: BorderRadius.circular(5)
                                           )
                                       ),
-                                      onPressed: (){}, child: Text("Submit"))),
+                                      onPressed: addVender, child: Text("Submit"))),
                             ],
                           ),
                         ),

@@ -12,6 +12,7 @@ import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
 import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
+import 'package:rent_collection_app/Services/ShopApiService.dart';
 
 class DeleteShopsPage extends StatefulWidget {
   const DeleteShopsPage({super.key});
@@ -25,6 +26,24 @@ class _DeleteShopsPageState extends State<DeleteShopsPage> {
   bool _isDrawerOpen = false;
 
   final _shopIdController = TextEditingController();
+  bool showSuccessMessage = false;
+
+  Future<void> delete() async {
+    final String shopId = _shopIdController.text;
+
+    final response = await ShopApiService().delete(shopId);
+
+    if(response['success']) {
+      setState(() {
+        showSuccessMessage = true;
+        print(response['message']);
+        _shopIdController.clear();
+      });
+    }
+    else{
+      print(response['message']);
+    }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -253,7 +272,7 @@ class _DeleteShopsPageState extends State<DeleteShopsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 10,),
-                        Text("Delete", style: TextStyle(fontSize: 25)),
+                        Text("Delete Shop", style: TextStyle(fontSize: 25)),
                         SizedBox(height: 20),
                         TextField(
                           controller: _shopIdController,
@@ -265,7 +284,7 @@ class _DeleteShopsPageState extends State<DeleteShopsPage> {
                         SizedBox(height: 20,),
                         SizedBox(
                             height: 40,
-                            width: 120,
+                            width: 150,
                             child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                     foregroundColor: Colors.white,
@@ -274,8 +293,8 @@ class _DeleteShopsPageState extends State<DeleteShopsPage> {
                                         borderRadius: BorderRadius.circular(5)
                                     )
                                 ),
-                                onPressed: () {
-                                },child: Text("Delete Shop")))
+                                onPressed: delete,
+                                child: Text("Delete Shop")))
                       ],
                     )
                 ),

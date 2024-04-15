@@ -13,9 +13,11 @@ import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
 import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
+import 'package:rent_collection_app/services/PaymentApiService.dart';
+import 'package:intl/intl.dart';
 
 class AddPayments extends StatefulWidget {
-  const AddPayments({super.key});
+  const AddPayments({Key? key}) : super(key: key);
 
   @override
   State<AddPayments> createState() => _AddPaymentsState();
@@ -25,17 +27,86 @@ class _AddPaymentsState extends State<AddPayments> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  DateTime? _Date;
+  String? _selectedCategory;
+  final TextEditingController _amountController = TextEditingController();
+  String? _selectedMethod;
+  final TextEditingController _referenceIdController = TextEditingController();
+  final TextEditingController _paymentDateController = TextEditingController();
+  bool showSuccessMessage = false;
 
-  String? selectedCategory;
-  List<String> category = ["Deposit", "Rent", "Expense"];
+  DateTime? _selectedDate;
 
-  String? selectedMethod;
+  List<String> category = ["Deposit", "Rent"];
+
   List<String> method = ["Cash", "Online"];
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _paymentDateController.text = DateFormat.yMd().format(DateTime.now());
+  }
 
+  Future<void> addPayment() async {
+    final String category = _selectedCategory!;
+    final double amount = double.tryParse(_amountController.text) ?? 0.0;
+    final String method = _selectedMethod!;
+    final String referenceId = _referenceIdController.text;
+    DateTime? selectedDate = _selectedDate;
+
+    if (category.isEmpty || amount == 0 || method.isEmpty || referenceId.isEmpty || selectedDate == null) {
+      print('Missing required fields.');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please fill all the required fields.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final result = await PaymentApiService().addPayment(
+        category,
+        amount,
+        method,
+        referenceId,
+        selectedDate,
+      );
+
+      if (result['success']) {
+        setState(() {
+          showSuccessMessage = true;
+          _selectedCategory = null;
+          _amountController.clear();
+          _selectedMethod = null;
+          _referenceIdController.clear();
+          _paymentDateController.clear();
+          _selectedDate = null;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add payment. Please try again later.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (error) {
+      print('Error adding payment: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('An error occurred. Please try again later.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        showSuccessMessage = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Asset Rent", "Shop Rent"]},
       {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
@@ -53,28 +124,30 @@ class _AddPaymentsState extends State<AddPayments> {
           leading: IconButton(
             icon: Icon(Icons.menu, color: Colors.white, size: 30),
             onPressed: () {
-              if (_isDrawerOpen) {
-                _scaffoldKey.currentState!.openEndDrawer();
-                _isDrawerOpen = false;
-              } else {
-                _scaffoldKey.currentState!.openDrawer();
-                _isDrawerOpen = true;
-              }
+              setState(() {
+                _isDrawerOpen = !_isDrawerOpen;
+                if (_isDrawerOpen) {
+                  _scaffoldKey.currentState!.openDrawer();
+                } else {
+                  _scaffoldKey.currentState!.openEndDrawer();
+                }
+              });
             },
           ),
           actions: [
             SizedBox(
-                width: 60,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.teal.shade900
-                  ),
-                  onPressed: (){
-                    showModalBottomSheet(
-                      backgroundColor: Colors.teal.shade900,
-                      context: context, builder: (BuildContext context) {
+              width: 60,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.teal.shade900,
+                ),
+                onPressed: () {
+                  showModalBottomSheet(
+                    backgroundColor: Colors.teal.shade900,
+                    context: context,
+                    builder: (BuildContext context) {
                       return Container(
                         padding: EdgeInsets.all(20),
                         child: Column(
@@ -82,44 +155,42 @@ class _AddPaymentsState extends State<AddPayments> {
                           children: [
                             AppBar(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10), // Adjust the value as needed
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               leading: Icon(Icons.account_circle, size: 40),
                               title: Text("Robert", style: TextStyle(fontSize: 20)),
                             ),
                             SizedBox(height: 20),
                             ListTile(
-                              leading: (Icon(Icons.settings,color: Colors.teal.shade200,)),
-                              title: Text("Change Password",style: TextStyle(color: Colors.white),),
+                              leading: Icon(Icons.settings, color: Colors.teal.shade200),
+                              title: Text("Change Password", style: TextStyle(color: Colors.white)),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => ChangePswd())
-                                );
-                              },
-                            ), ListTile(
-                              leading: (Icon(Icons.person,color: Colors.teal.shade200,)),
-                              title: Text("My Profile",style: TextStyle(color: Colors.white),),
-                              onTap: () {
-                                Navigator.of(context).pop();
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Profile())
+                                  context,
+                                  MaterialPageRoute(builder: (context) => ChangePswd()),
                                 );
                               },
                             ),
                             ListTile(
-                              leading: (Icon(Icons.logout,color: Colors.teal.shade200,)),
-                              title: Text("Logout",style: TextStyle(color: Colors.white),),
+                              leading: Icon(Icons.person, color: Colors.teal.shade200),
+                              title: Text("My Profile", style: TextStyle(color: Colors.white)),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => HomePage())
+                                  context,
+                                  MaterialPageRoute(builder: (context) => Profile()),
+                                );
+                              },
+                            ),
+                            ListTile(
+                              leading: Icon(Icons.logout, color: Colors.teal.shade200),
+                              title: Text("Logout", style: TextStyle(color: Colors.white)),
+                              onTap: () {
+                                Navigator.of(context).pop();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => HomePage()),
                                 );
                               },
                             ),
@@ -127,9 +198,12 @@ class _AddPaymentsState extends State<AddPayments> {
                         ),
                       );
                     },
-                    );
-                  }, child: Icon(Icons.account_circle, color: Colors.white, size: 30),)),
-            SizedBox(width: 10,)
+                  );
+                },
+                child: Icon(Icons.account_circle, color: Colors.white, size: 30),
+              ),
+            ),
+            SizedBox(width: 10),
           ],
         ),
         drawer: Drawer(
@@ -142,11 +216,11 @@ class _AddPaymentsState extends State<AddPayments> {
                 width: 300,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.black,
-                      backgroundColor: Colors.teal.shade900,
-                      shape:RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5)
-                      )
+                    foregroundColor: Colors.black,
+                    backgroundColor: Colors.teal.shade900,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.push(
@@ -154,16 +228,19 @@ class _AddPaymentsState extends State<AddPayments> {
                       MaterialPageRoute(builder: (context) => Overview()),
                     );
                   },
-                  child: Text("Dashboard",style: TextStyle(fontSize: 20,color: Colors.white),),
+                  child: Text(
+                    "Dashboard",
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
                 ),
               ),
               ListView.builder(
                 shrinkWrap: true,
                 itemCount: data2.length,
-                itemBuilder: (context,index){
+                itemBuilder: (context, index) {
                   return ListTile(
-                    leading: data2[index]["leading"],
-                    title: Text(data2[index]["title"]),
+                    leading: data2[index]["leading"] as Widget?,
+                    title: Text(data2[index]["title"] as String),
                     trailing: DropdownButton<String>(
                       elevation: 0,
                       underline: Container(),
@@ -251,133 +328,141 @@ class _AddPaymentsState extends State<AddPayments> {
               children: [
                 // Shop Keepers Details
                 Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white
-                    ),
-                    padding: EdgeInsets.all(20), // Add margin to separate sections
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 10,),
-                        Text("Add Payment", style: TextStyle(fontSize: 25)),
-                        SizedBox(height: 20),
-                        DropdownButtonFormField<String>(
-                          value: selectedCategory,
-                          items: category.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedCategory = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Category",
-                            border: OutlineInputBorder(),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white,
+                  ),
+                  padding: EdgeInsets.all(20), // Add margin to separate sections
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 10),
+                      Text("Add Payment", style: TextStyle(fontSize: 25)),
+                      SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategory,
+                        items: category.map((state) {
+                          return DropdownMenuItem<String>(
+                            value: state,
+                            child: Text(state),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedCategory = newValue;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Select Category",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      TextField(
+                        controller: _amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: "Amount",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      DropdownButtonFormField<String>(
+                        value: _selectedMethod,
+                        items: method.map((state) {
+                          return DropdownMenuItem<String>(
+                            value: state,
+                            child: Text(state),
+                          );
+                        }).toList(),
+                         onChanged: (newValue) {
+                          setState(() {
+                            _selectedMethod = newValue;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: "Select Method",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      TextField(
+                        controller: _referenceIdController,
+                        decoration: InputDecoration(
+                          labelText: "Reference ID",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: "Payment Date",
+                          border: OutlineInputBorder(),
+                          suffixIcon: IconButton(
+                            icon: Icon(Icons.calendar_today),
+                            onPressed: () async {
+                              final DateTime? pickedDate = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime(2000),
+                                lastDate: DateTime(2101),
+                              );
+                              if (pickedDate != null) {
+                                setState(() {
+                                  _selectedDate = pickedDate;
+                                  _paymentDateController.text = DateFormat('yyyy/MM/dd').format(pickedDate); // Use the desired format
+                                });
+                              }
+                            },
                           ),
                         ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                              labelText: "Amount",
-                              border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedMethod,
-                          items: method.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedMethod = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Method",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          decoration: InputDecoration(
-                              labelText: "Reference id",
-                              border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: "Payment Date",
-                            border: OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.calendar_today),
-                              onPressed: () async {
-                                final DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2101),
-                                );
-                                if (pickedDate != null && pickedDate != _Date) {
-                                  setState(() {
-                                    _Date = pickedDate;
-                                  });
-                                }
-                              },
+                        readOnly: true,
+                        controller: _paymentDateController,
+                      ),
+                      SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              width: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.teal.shade900,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                ),
+                                onPressed: addPayment,
+                                child: Text("Submit"),
+                              ),
                             ),
                           ),
-                          readOnly: true, // Makes the TextField readonly
-                          controller: TextEditingController(
-                            // Displays the selected date in the TextField
-                            text: _Date != null
-                                ? '${_Date!.day}/${_Date!.month}/${_Date!.year}'
-                                : '',
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              width: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  foregroundColor: Colors.white,
+                                  backgroundColor: Colors.teal.shade900,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Text("Back"),
+                              ),
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 20,),
-                        Row(
-                          children: [
-                            Expanded(child: SizedBox(
-                                height: 40,
-                                width: 50,
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        backgroundColor: Colors.teal.shade900,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5)
-                                        )
-                                    ),
-                                    onPressed: (){}, child: Text("Submit")))),
-                            SizedBox(width: 10,),
-                            Expanded(child: SizedBox(
-                                height: 40,
-                                width: 50,
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        backgroundColor: Colors.teal.shade900,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5)
-                                        )
-                                    ),
-                                    onPressed: (){
-                                      Navigator.pop(context);
-                                    }, child: Text("Back"))))
-                          ],
-                        )
-                      ],
-                    )
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -387,8 +472,3 @@ class _AddPaymentsState extends State<AddPayments> {
     );
   }
 }
-
-
-
-
-

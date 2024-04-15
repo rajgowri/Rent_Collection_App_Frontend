@@ -1,9 +1,9 @@
 class PaymentDetails {
-  final String category;
-  final double amount;
-  final String method;
-  final String referenceId;
-  final DateTime paymentDate;
+  String? category;
+  double? amount;
+  String? method;
+  String? referenceId;
+  DateTime? paymentDate;
 
   PaymentDetails({
     required this.category,
@@ -13,23 +13,23 @@ class PaymentDetails {
     required this.paymentDate,
   });
 
-  factory PaymentDetails.fromJson(Map<String, dynamic> json) {
-    return PaymentDetails(
-      category: json['category'] as String,
-      amount: json['amount'] as double,
-      method: json['method'] as String,
-      referenceId: json['referenceId'] as String,
-      paymentDate: DateTime.parse(json['paymentDate'] as String),
-    );
-  }
-
   Map<String, dynamic> toJson() {
     return {
       'category': category,
       'amount': amount,
       'method': method,
       'referenceId': referenceId,
-      'paymentDate': paymentDate.toIso8601String(),
+      'paymentDate': paymentDate?.toIso8601String(),
     };
+  }
+
+  factory PaymentDetails.fromJson(Map<String, dynamic> json) {
+    return PaymentDetails(
+      category: json['category'] as String,
+      amount: json['amount'] as double,
+      method: json['method'] as String,
+      referenceId: json['referenceId'] as String,
+      paymentDate: json['paymentDate'] != null ? DateTime.parse(json['paymentDate']) : null,
+    );
   }
 }

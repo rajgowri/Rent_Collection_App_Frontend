@@ -26,11 +26,12 @@ class _ProfileState extends State<Profile> {
 
   TextEditingController _firstName = TextEditingController();
   TextEditingController _lastName = TextEditingController();
+  TextEditingController _emailAddress = TextEditingController();
 
   void _resetFields() {
     _firstName.clear();
     _lastName.clear();
-
+    _emailAddress.clear();
   }
 
   @override
@@ -265,6 +266,14 @@ class _ProfileState extends State<Profile> {
                   controller: _lastName,
                   decoration: InputDecoration(
                       labelText: "Last Name",
+                      border: OutlineInputBorder()
+                  ),
+                ),
+                SizedBox(height: 10,),
+                TextField(
+                  controller: _emailAddress,
+                  decoration: InputDecoration(
+                      labelText: "Email",
                       border: OutlineInputBorder()
                   ),
                 ),

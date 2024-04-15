@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
+import 'package:rent_collection_app/Services/UserApiService.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key});
@@ -15,6 +16,71 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool showSuccessMessage = false;
+
+  void sendValuesToApi() async {
+    try {
+      final responseData = await UserApiService().registerUser(
+        _firstNameController.text,
+        _lastNameController.text,
+        _emailController.text,
+        _mobileNumberController.text,
+        _passwordController.text,
+      );
+
+      if (responseData["status"] == "success" && responseData["message"] == "successfully registered user") {
+        setState(() {
+          showSuccessMessage = true;
+          _firstNameController.clear();
+          _lastNameController.clear();
+          _emailController.clear();
+          _mobileNumberController.clear();
+          _passwordController.clear();
+        });
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => Overview()),
+        );
+      }
+    } catch (error) {
+      // If registration fails due to user already existing, show appropriate error message
+      if (error.toString().contains("User already exists")) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Registration Failed"),
+            content: Text("User already exists. Please use a different email address."),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // If registration fails due to other reasons, show generic error message
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text("Registration Failed"),
+            content: Text("Failed to register user. Please try again later."),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("OK"),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +233,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             backgroundColor: Colors.teal.shade900,
                             foregroundColor: Colors.white,
                           ),
-                          onPressed: (){
-                            Navigator.push(context, MaterialPageRoute(builder: (context)=>Overview()));
-                          },
+                          onPressed: sendValuesToApi,
                           child: Text(
                             "Register",
                             style: TextStyle(

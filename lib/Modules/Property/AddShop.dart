@@ -12,6 +12,7 @@ import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
 import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
+import 'package:rent_collection_app/Services/ShopApiService.dart';
 
 class AddShopsPage extends StatefulWidget {
 
@@ -29,6 +30,35 @@ class _AddShopsPageState extends State<AddShopsPage> {
   final _shopIdController = TextEditingController();
   final _shopAddressController = TextEditingController();
   final _shopRentController = TextEditingController();
+  bool showSuccessMessage = false;
+
+  Future<void> addShop() async {
+    final String shopId = _shopIdController.text;
+    final String shopAddress = _shopAddressController.text;
+    final String shopRent = _shopRentController.text;
+
+
+    final response = await ShopApiService().addShop(
+      shopId,
+      shopAddress,
+      shopRent,
+    );
+
+    if (response['success']) {
+      setState(() {
+        showSuccessMessage = true;
+        print(response['message']);
+        _shopIdController.clear();
+        _shopAddressController.clear();
+        _shopRentController.clear();
+      }
+        );
+      }
+      else {
+      print(response['message']);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -294,8 +324,8 @@ class _AddShopsPageState extends State<AddShopsPage> {
                                         borderRadius: BorderRadius.circular(5)
                                     )
                                 ),
-                                onPressed: ()  {
-                                }, child: Text("Add Shop")))
+                                onPressed: addShop,
+                                child: Text("Add Shop")))
                       ],
                     )
                 ),

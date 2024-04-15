@@ -12,6 +12,8 @@ import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
 import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
+import 'package:rent_collection_app/Services/UserApiService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChangePswd extends StatefulWidget {
   const ChangePswd({Key? key}) : super(key: key);
@@ -26,39 +28,54 @@ class _ChangePswdState extends State<ChangePswd> {
 
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _isButtonEnabled = false;
+  String? _userEmail;
+  String _message = '';
 
-  bool _showOldPasswordError = false;
-  bool _showNewPasswordError = false;
-  bool _showConfirmPasswordError = false;
-  bool _passwordsMatch = true;
-
-  String? _validatePassword(String value) {
-    if (value.isEmpty) {
-      return 'Password cannot be empty.';
-    } else if (value.length < 8) {
-      return 'Password must be at least 8 characters long.';
-    } else if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]')
-        .hasMatch(value)) { // Check for special characters
-      return 'Password must contain at least one special character.';
-    } else if (!RegExp(r'[0-9]')
-        .hasMatch(value)) { // Check for numbers
-      return 'Password must contain at least one number.';
-    } else if (value == _oldPasswordController.text && _oldPasswordController.text.isNotEmpty) {
-      return 'New password cannot be the same as old password.';
-    }
-    return null;
+  @override
+  void initState() {
+    super.initState();
+    _oldPasswordController.addListener(_checkTextField);
+    _newPasswordController.addListener(_checkTextField);
+    _loadUserData();
   }
 
-  void _resetFields() {
-    _oldPasswordController.clear();
-    _newPasswordController.clear();
-    _confirmPasswordController.clear();
+  @override
+  void dispose() {
+    _oldPasswordController.dispose();
+    _newPasswordController.dispose();
+    super.dispose();
+  }
 
-    _showOldPasswordError = false;
-    _showNewPasswordError = false;
-    _showConfirmPasswordError = false;
-    _passwordsMatch = true;
+  void _checkTextField() {
+    setState(() {
+      _isButtonEnabled = _oldPasswordController.text.isNotEmpty &&
+          _newPasswordController.text.isNotEmpty;
+    });
+  }
+
+  Future<void> _loadUserData() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    setState(() {
+      _userEmail = preferences.getString("userEmail");
+    });
+  }
+
+  void changePassword() async {
+    final response = await UserApiService().changePswd(
+      _userEmail.toString(),
+      _oldPasswordController.text,
+      _newPasswordController.text,
+    );
+    if (response['status'] == 'success') {
+      setState(() {
+        _message = 'Password changed successfully';
+      });
+    } else {
+      setState(() {
+        _message = 'Failed to change password';
+      });
+    }
   }
 
   @override
@@ -282,86 +299,39 @@ class _ChangePswdState extends State<ChangePswd> {
                 SizedBox(height: 20),
                 TextField(
                   controller: _oldPasswordController,
+                  obscureText: true,
                   decoration: InputDecoration(
                     labelText: "Old Password",
                     border: OutlineInputBorder(),
-                    errorText: _showOldPasswordError ? 'Old password is required.' : null,
                   ),
                 ),
                 SizedBox(height: 10,),
                 TextField(
                   controller: _newPasswordController,
+                  obscureText: true,
                   decoration: InputDecoration(
                     labelText: "New Password",
                     border: OutlineInputBorder(),
-                    errorText: _showNewPasswordError ? _validatePassword(_newPasswordController.text) : null,
                   ),
                 ),
                 SizedBox(height: 20,),
                 Text("* Your Password can't be too similar to your personal information.\n* Your Password must contain at least 8 characters.\n* Your password can't be a commonly used password.\n*Your password can't be entirely numeric",style: TextStyle(fontSize: 17),),
                 SizedBox(height: 20,),
-                TextField(
-                  controller: _confirmPasswordController,
-                  decoration: InputDecoration(
-                    labelText: "Confirm Password",
-                    border: OutlineInputBorder(),
-                    errorText: _showConfirmPasswordError
-                        ? (_passwordsMatch ? null : 'Passwords do not match.')
-                        : null,
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isButtonEnabled ? Colors.green[900] : null,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: _isButtonEnabled ? changePassword : null,
+                  child: Text('Save'),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  _message,
+                  style: TextStyle(
+                    color: _message.startsWith('Failed') ? Colors.red : Colors.green,
                   ),
                 ),
-                SizedBox(height: 20,),
-                Row(
-                  children: [
-                    SizedBox(
-                        height: 40,
-                        width: 120,
-                        child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.teal.shade900,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(2)
-                                )
-                            ),
-                            onPressed: (){
-                              setState(() {
-                                _showOldPasswordError = _oldPasswordController.text.isEmpty;
-                                _showNewPasswordError = _validatePassword(_newPasswordController.text) != null;
-                                _showConfirmPasswordError = _confirmPasswordController.text.isEmpty;
-                                _passwordsMatch = _newPasswordController.text == _confirmPasswordController.text;
-                              });
-                              if (!_showOldPasswordError && !_showNewPasswordError && !_showConfirmPasswordError && _passwordsMatch) {
-                                _resetFields();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Password updated successfully!'),
-                                  ),
-                                );
-                              }
-                            },
-                            child: Text("Update",style: TextStyle(fontSize: 17),))),
-                    SizedBox(width: 80,),
-                    Expanded(
-                      child: SizedBox(
-                        height: 40,
-                        width: 0,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: Colors.teal.shade900,
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(2)
-                              )
-                          ),
-                          onPressed: (){
-                            _resetFields();
-                          },child: Text("Reset",style: TextStyle(fontSize: 17),),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
               ],
             ),
           ),
