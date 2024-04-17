@@ -13,6 +13,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _showpassword = false;
+  String errorMessage = '';
   bool showSuccessMessage = false;
   //late SharedPreferences _prefs;
   //final String userId="";
