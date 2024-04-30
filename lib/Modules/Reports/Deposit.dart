@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:rent_collection_app/Modules/HomePage.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
@@ -24,34 +27,72 @@ class _DepositReportPageState extends State<DepositReportPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  DateTime? _Date;
+  TextEditingController _firstNameController = new TextEditingController();
+  TextEditingController _shopIdController = new TextEditingController();
+  List<dynamic> _searchVendors = [];
 
-  String? selectedCategory;
-  List<String> categories = ["Furniture", "Electrical Appliances", "Others"];
+  Future<void> _searchVendor(String firstName, String shopId) async {
+    try {
+      // Construct the request body
+      final Map<String, dynamic> requestBody = {
+        'firstName': firstName,
+        'shopId': shopId,
+      };
 
-  String? selectedSubCategory;
-  List<String> subCategories = [];
+      final response = await http.post(
+        Uri.parse('http://192.168.88.136:3001/vendor/search'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json'
+        }, // Set the content-type header
+      );
 
-  String? selectedTenant;
-  List<String> tenant = ["person 1", "person 2", "person 3", "person 4", "person5"];
+      if (response.statusCode == 200) {
+        // Parse the response JSON
+        final jsonResponse = json.decode(response.body);
+        setState(() {
+          // Extract the search results from the response
+          _searchVendors = jsonResponse['data'] != null ? [jsonResponse['data']] : [];
+        });
+      } else {
+        throw Exception('Failed to load search results');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
 
-  String? selectedShop;
-  List<String> shop = ["Shop 1", "Shop 2", "Shop 3", "Shop 4", "Shop 5"];
-
-  String? selectedAssets;
-  List<String> assets = ["1001","1002","1003","2001","2001","2003","3009","4002","4006","5003"];
-
-  String? selectedStatus;
-  List<String> status = ["Unpaid", "Paid", "Partly Paid"];
+  @override
+  void dispose() {
+    // Dispose of controllers when the widget is removed from the tree
+    _firstNameController.dispose();
+    _shopIdController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-
     List<Map<String, dynamic>> data2 = [
-      {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
-      {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
-      {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
+      {
+        "leading": Icon(Icons.bar_chart, color: Colors.black,),
+        "title": "Report",
+        "options": ["Rent", "Deposit", "Payment Report", "Shop Rent"]
+      },
+      {
+        "leading": Icon(Icons.person, color: Colors.black,),
+        "title": "Vender",
+        "options": ["Add", "Message"]
+      },
+      {
+        "leading": Icon(Icons.area_chart, color: Colors.black,),
+        "title": "Property",
+        "options": ["Add Shop", "Delete Shop"]
+      },
+      {
+        "leading": Icon(Icons.wallet, color: Colors.black,),
+        "title": "Payment",
+        "options": ["Payment", "Categories"]
+      },
     ];
 
     return MaterialApp(
@@ -82,7 +123,7 @@ class _DepositReportPageState extends State<DepositReportPage> {
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.teal.shade900
                   ),
-                  onPressed: (){
+                  onPressed: () {
                     showModalBottomSheet(
                       backgroundColor: Colors.teal.shade900,
                       context: context, builder: (BuildContext context) {
@@ -93,15 +134,19 @@ class _DepositReportPageState extends State<DepositReportPage> {
                           children: [
                             AppBar(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10), // Adjust the value as needed
+                                borderRadius: BorderRadius.circular(
+                                    10), // Adjust the value as needed
                               ),
                               leading: Icon(Icons.account_circle, size: 40),
-                              title: Text("Robert", style: TextStyle(fontSize: 20)),
+                              title: Text(
+                                  "Robert", style: TextStyle(fontSize: 20)),
                             ),
                             SizedBox(height: 20),
                             ListTile(
-                              leading: (Icon(Icons.settings,color: Colors.teal.shade200,)),
-                              title: Text("Change Password",style: TextStyle(color: Colors.white),),
+                              leading: (Icon(
+                                Icons.settings, color: Colors.teal.shade200,)),
+                              title: Text("Change Password",
+                                style: TextStyle(color: Colors.white),),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
@@ -111,8 +156,10 @@ class _DepositReportPageState extends State<DepositReportPage> {
                                 );
                               },
                             ), ListTile(
-                              leading: (Icon(Icons.person,color: Colors.teal.shade200,)),
-                              title: Text("My Profile",style: TextStyle(color: Colors.white),),
+                              leading: (Icon(
+                                Icons.person, color: Colors.teal.shade200,)),
+                              title: Text("My Profile",
+                                style: TextStyle(color: Colors.white),),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
@@ -123,8 +170,10 @@ class _DepositReportPageState extends State<DepositReportPage> {
                               },
                             ),
                             ListTile(
-                              leading: (Icon(Icons.logout,color: Colors.teal.shade200,)),
-                              title: Text("Logout",style: TextStyle(color: Colors.white),),
+                              leading: (Icon(
+                                Icons.logout, color: Colors.teal.shade200,)),
+                              title: Text("Logout",
+                                style: TextStyle(color: Colors.white),),
                               onTap: () {
                                 Navigator.of(context).pop();
                                 Navigator.push(
@@ -139,7 +188,9 @@ class _DepositReportPageState extends State<DepositReportPage> {
                       );
                     },
                     );
-                  }, child: Icon(Icons.account_circle, color: Colors.white, size: 30),)),
+                  },
+                  child: Icon(
+                      Icons.account_circle, color: Colors.white, size: 30),)),
             SizedBox(width: 10,)
           ],
         ),
@@ -155,7 +206,7 @@ class _DepositReportPageState extends State<DepositReportPage> {
                   style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.teal.shade900,
-                      shape:RoundedRectangleBorder(
+                      shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5)
                       )
                   ),
@@ -165,13 +216,13 @@ class _DepositReportPageState extends State<DepositReportPage> {
                       MaterialPageRoute(builder: (context) => Overview()),
                     );
                   },
-                  child: Text("Dashboard",style: TextStyle(fontSize: 20),),
+                  child: Text("Dashboard", style: TextStyle(fontSize: 20),),
                 ),
               ),
               ListView.builder(
                 shrinkWrap: true,
                 itemCount: data2.length,
-                itemBuilder: (context,index){
+                itemBuilder: (context, index) {
                   return ListTile(
                     leading: data2[index]["leading"],
                     title: Text(data2[index]["title"]),
@@ -179,7 +230,8 @@ class _DepositReportPageState extends State<DepositReportPage> {
                       elevation: 0,
                       underline: Container(),
                       iconEnabledColor: Colors.black,
-                      items: (data2[index]["options"] as List<String>).map((String value) {
+                      items: (data2[index]["options"] as List<String>).map((
+                          String value) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -189,25 +241,29 @@ class _DepositReportPageState extends State<DepositReportPage> {
                         if (newValue == "Rent") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => RentReportPage()),
+                            MaterialPageRoute(
+                                builder: (context) => RentReportPage()),
                           );
                         }
                         else if (newValue == "Deposit") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => DepositReportPage()),
+                            MaterialPageRoute(
+                                builder: (context) => DepositReportPage()),
                           );
                         }
                         else if (newValue == "Payment Report") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => PaymentReportPage()),
+                            MaterialPageRoute(
+                                builder: (context) => PaymentReportPage()),
                           );
                         }
                         else if (newValue == "Shop Rent") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => ShopReportPage()),
+                            MaterialPageRoute(
+                                builder: (context) => ShopReportPage()),
                           );
                         }
                         else if (newValue == "Add") {
@@ -219,31 +275,36 @@ class _DepositReportPageState extends State<DepositReportPage> {
                         else if (newValue == "Message") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
+                            MaterialPageRoute(
+                                builder: (context) => MessageVender()),
                           );
                         }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => AddShopsPage()),
+                            MaterialPageRoute(
+                                builder: (context) => AddShopsPage()),
                           );
                         }
                         else if (newValue == "Delete Shop") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => DeleteShopsPage()),
+                            MaterialPageRoute(
+                                builder: (context) => DeleteShopsPage()),
                           );
                         }
                         else if (newValue == "Payment") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => PaymentsPage()),
+                            MaterialPageRoute(
+                                builder: (context) => PaymentsPage()),
                           );
                         }
                         else if (newValue == "Categories") {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => CategoriesPage()),
+                            MaterialPageRoute(
+                                builder: (context) => CategoriesPage()),
                           );
                         }
                       },
@@ -262,146 +323,115 @@ class _DepositReportPageState extends State<DepositReportPage> {
               children: [
                 // Shop Keepers Details
                 Container(
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white
-                    ),
-                    padding: EdgeInsets.all(20), // Add margin to separate sections
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 10,),
-                        Text("Search", style: TextStyle(fontSize: 25)),
-                        SizedBox(height: 20),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: "Search by Date",
-                            border: OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.calendar_today),
-                              onPressed: () async {
-                                final DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2101),
-                                );
-                                if (pickedDate != null && pickedDate != _Date) {
-                                  setState(() {
-                                    _Date = pickedDate;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          readOnly: true,
-                          controller: TextEditingController(
-                            text: _Date != null
-                                ? '${_Date!.day}/${_Date!.month}/${_Date!.year}'
-                                : '',
-                          ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white,
+                  ),
+                  padding: EdgeInsets.all(20),
+                  // Add margin to separate sections
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 10,),
+                      Text("Search", style: TextStyle(fontSize: 25)),
+                      SizedBox(height: 20),
+                      TextField(
+                        controller: _firstNameController,
+                        decoration: InputDecoration(
+                          labelText: "Search by Vender",
+                          border: OutlineInputBorder(),
                         ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          decoration: InputDecoration(
-                              labelText: "Search by Vender",
-                              border: OutlineInputBorder()
-                          ),
+                      ),
+                      SizedBox(height: 10,),
+                      TextField(
+                        controller: _shopIdController,
+                        decoration: InputDecoration(
+                          labelText: "Search by Shop",
+                          border: OutlineInputBorder(),
                         ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedTenant,
-                          items: tenant.map((tenant) {
-                            return DropdownMenuItem<String>(
-                              value: tenant,
-                              child: Text(tenant),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedTenant = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Vender",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          decoration: InputDecoration(
-                              labelText: "Search by Shop",
-                              border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedShop,
-                          items: shop.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedShop = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Shop",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedStatus,
-                          items: status.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedStatus = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Status",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 20,),
-                        Row(
-                          children: [
-                            Expanded(child: SizedBox(
-                                height: 40,
-                                width: 100,
-                                child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        backgroundColor: Colors.teal.shade900,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(5)
-                                        )
-                                    ),
-                                    onPressed: (){}, child: Text("Submit")))),
-                            SizedBox(width: 50,),
-                            Expanded(child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.teal.shade900,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(5)
-                                    )
+                      ),
+                      SizedBox(height: 20,),
+                      Row(
+                        children: [
+                          Expanded(child: SizedBox(
+                            height: 40,
+                            width: 100,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.teal.shade900,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5),
                                 ),
-                                onPressed: (){},
-                                child: Text("View All")),)
-                          ],
-                        )
-                      ],
-                    )
+                              ),
+                              onPressed: () async {
+                                await _searchVendor(
+                                  _firstNameController.text,
+                                  _shopIdController.text,
+                                );
+                              },
+                              child: Text("Submit"),
+                            ),
+                          )),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20), // Add some spacing between sections
+                SizedBox(
+                  height: 300, // Set a fixed height to limit the height of the second ListView
+                  child: ListView.builder(
+                    itemCount: _searchVendors.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        child: ListTile(
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Name: ${_searchVendors[index]['firstName'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Mobile Number: ${_searchVendors[index]['mobileNumber'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Address: ${_searchVendors[index]['permanentAddress'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "State: ${_searchVendors[index]['selectedState'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Shop Id: ${_searchVendors[index]['shopId'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Shop Deposit: ${_searchVendors[index]['depositeAmount'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Total Asset: ${_searchVendors[index]['totalAsset'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Asset List: ${_searchVendors[index]['assetList'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Asset Rent: ${_searchVendors[index]['assetRentAmount'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+
+                    },
+                  ),
                 ),
               ],
             ),
@@ -411,5 +441,3 @@ class _DepositReportPageState extends State<DepositReportPage> {
     );
   }
 }
-
-

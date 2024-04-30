@@ -12,11 +12,9 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
-import 'package:rent_collection_app/Services/ShopApiService.dart';
 import 'package:rent_collection_app/Services/VenderApiService.dart';
 
 class AddPage extends StatefulWidget {
-
   const AddPage({super.key});
 
   @override
@@ -39,6 +37,7 @@ class _AddPageState extends State<AddPage> {
   final TextEditingController _shopIdController = TextEditingController();
   final TextEditingController _totalAsset = TextEditingController();
   final TextEditingController _assetList = TextEditingController();
+  final TextEditingController _shopRent = TextEditingController();
   final TextEditingController _depositAmount = TextEditingController();
   final TextEditingController _assetRentAmount = TextEditingController();
   String? _selectedPayment;
@@ -47,22 +46,20 @@ class _AddPageState extends State<AddPage> {
   final TextEditingController _leaseEndDate = TextEditingController();
   bool showSuccessMessage = false;
 
-  List<String> shopIds = [];
-
-  Future<void> fetchShopIds() async {
-    try {
-      shopIds = await ShopApiService().fetchShopIds();
-      setState(() {});
-    } catch (error) {
-      print("Failed to fetch shop IDs: $error");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to fetch shop IDs: $error"),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  // Future<void> fetchShopIds() async {
+  //   try {
+  //     shopIds = await ShopApiService().fetchShopIds();
+  //     setState(() {});
+  //   } catch (error) {
+  //     print("Failed to fetch shop IDs: $error");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text("Failed to fetch shop IDs: $error"),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
 
   Future<void> addVender() async {
     final String mobileNumber = _mobileNumber.text;
@@ -77,6 +74,7 @@ class _AddPageState extends State<AddPage> {
     final String shopId = _shopIdController.text;
     final String totalAsset = _totalAsset.text;
     final String assetListString = _assetList.text;
+    final String shopRent = _shopRent.text;
     final List<String> assetList = assetListString.split(',');
     final String depositeAmount = _depositAmount.text;
     final String assetRentAmount = _assetRentAmount.text;
@@ -85,27 +83,27 @@ class _AddPageState extends State<AddPage> {
     final String leaseStartDate = _leaseStartDate.text;
     final String leaseEndDate = _leaseEndDate.text;
 
-
     try {
       final response = await VenderApiService().addVender(
-        mobileNumber,
-        firstName,
-        lastName,
-        temporaryAddress,
-        permanentAddress,
-        city,
-        selectedState,
-        pinCode,
-        emergencyContactNumber,
-        shopId,
-        totalAsset,
-        assetList,
-        depositeAmount,
-        assetRentAmount,
-        payment,
-        paymentReferenceId,
-        leaseStartDate,
-        leaseEndDate,
+          mobileNumber,
+          firstName,
+          lastName,
+          temporaryAddress,
+          permanentAddress,
+          city,
+          selectedState,
+          pinCode,
+          emergencyContactNumber,
+          shopId,
+          totalAsset,
+          assetList,
+          shopRent,
+          depositeAmount,
+          assetRentAmount,
+          payment,
+          paymentReferenceId,
+          leaseStartDate,
+          leaseEndDate
       );
 
       if (response['success']) {
@@ -123,14 +121,15 @@ class _AddPageState extends State<AddPage> {
           _emergencyContactNumber.clear();
           _shopIdController.clear();
           _totalAsset.clear();
+          _shopRent.clear();
           _assetList.clear();
           _depositAmount.clear();
           _assetRentAmount.clear();
+          _selectedPayment = null;
           _paymentReferenceId.clear();
           _leaseStartDate.clear();
           _leaseEndDate.clear();
         });
-        Navigator.pop(context, shopId);
       } else {
         print(response['message']);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -163,12 +162,6 @@ class _AddPageState extends State<AddPage> {
   ];
 
   List<String> payment = ["Cash", "Online"];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchShopIds();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -514,25 +507,11 @@ class _AddPageState extends State<AddPage> {
                               SizedBox(height: 10),
                               Text("Shop and Asset Details", style: TextStyle(fontSize: 25)),
                               SizedBox(height: 20),
-                              Container(
-                                padding: EdgeInsets.all(1),
-                                child: DropdownButtonFormField<String>(
-                                  value: _shopIdController.text,
-                                  items: shopIds.map((shopId) {
-                                    return DropdownMenuItem<String>(
-                                      value: shopId,
-                                      child: Text(shopId),
-                                    );
-                                  }).toList(),
-                                  onChanged: (newValue) {
-                                    setState(() {
-                                      _shopIdController.text = newValue!;
-                                    });
-                                  },
-                                  decoration: InputDecoration(
-                                    labelText: "Shop Id",
-                                    border: OutlineInputBorder(),
-                                  ),
+                              TextField(
+                                controller: _shopIdController,
+                                decoration: InputDecoration(
+                                  labelText: "Shop Id",
+                                  border: OutlineInputBorder(),
                                 ),
                               ),
                               SizedBox(height: 10),
@@ -549,6 +528,15 @@ class _AddPageState extends State<AddPage> {
                                 controller: _assetList,
                                 decoration: InputDecoration(
                                   labelText: "Asset List",
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              SizedBox(height: 10),
+                              TextField(
+                                controller: _shopRent,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: "Shop Rent",
                                   border: OutlineInputBorder(),
                                 ),
                               ),

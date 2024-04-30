@@ -17,6 +17,7 @@ class VenderApiService {
       String shopId,
       String totalAsset,
       List<String> assetList,
+      String shopRent,
       String depositeAmount,
       String assetRentAmount,
       String selectedPayment,
@@ -24,7 +25,7 @@ class VenderApiService {
       String leaseStartDate,
       String leaseEndDate) async {
     try {
-      var apiUrl = Uri.parse("http://192.168.174.136:3001/vendor/add");
+      var apiUrl = Uri.parse("http://192.168.88.136:3001/vendor/add");
       var response = await _client.post(
         apiUrl,
         headers: <String, String>{
@@ -43,6 +44,7 @@ class VenderApiService {
           "shopId": shopId,
           "totalAsset": totalAsset,
           "assetList": assetList,
+          "shopRent" : shopRent,
           "depositeAmount": depositeAmount,
           "assetRentAmount": assetRentAmount,
           "selectedPayment": selectedPayment,

@@ -10,6 +10,7 @@ class AddPageData {
   String? emergencyContactNumber;
   String? shopId;
   int? totalAsset;
+  double? shopRent;
   List<String>? assetList;
   double? depositAmount;
   double? assetRentAmount;
@@ -30,6 +31,7 @@ class AddPageData {
     this.emergencyContactNumber,
     this.shopId,
     this.totalAsset,
+    this.shopRent,
     this.assetList,
     this.depositAmount,
     this.assetRentAmount,
@@ -53,6 +55,7 @@ class AddPageData {
       'emergencyContactNumber': emergencyContactNumber,
       'shopId': shopId,
       'totalAsset': totalAsset,
+      'shopRent' : shopRent,
       'assetList': assetList,
       'depositAmount': depositAmount,
       'assetRentAmount': assetRentAmount,
@@ -77,6 +80,7 @@ class AddPageData {
       emergencyContactNumber: json['emergencyContactNumber'],
       shopId: json['shopId'],
       totalAsset: json['totalAsset'],
+      shopRent : json['shopRent'],
       assetList: json['assetList'] != null ? List<String>.from(json['assetList']) : null,
       depositAmount: json['depositAmount'],
       assetRentAmount: json['assetRentAmount'],

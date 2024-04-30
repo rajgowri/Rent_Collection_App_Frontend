@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
 import 'package:rent_collection_app/Modules/HomePage.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
 import 'package:rent_collection_app/Modules/Payments/Categories.dart';
@@ -25,25 +28,48 @@ class _RentReportPageState extends State<RentReportPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  DateTime? _Date;
+  TextEditingController _firstNameController = new TextEditingController();
+  TextEditingController _shopIdController = new TextEditingController();
+  List<dynamic> _searchVendors = [];
 
-  String? selectedCategory;
-  List<String> categories = ["Furniture", "Electrical Appliances", "Others"];
+  Future<void> _searchVendor(String firstName, String shopId) async {
+    try {
+      // Construct the request body
+      final Map<String, dynamic> requestBody = {
+        'firstName': firstName,
+        'shopId': shopId,
+      };
 
-  String? selectedSubCategory;
-  List<String> subCategories = [];
+      final response = await http.post(
+        Uri.parse('http://192.168.88.136:3001/vendor/search'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json'
+        }, // Set the content-type header
+      );
 
-  String? selectedTenant;
-  List<String> tenant = ["person 1", "person 2", "person 3", "person 4", "person5"];
+      if (response.statusCode == 200) {
+        // Parse the response JSON
+        final jsonResponse = json.decode(response.body);
+        setState(() {
+          // Extract the search results from the response
+          _searchVendors = jsonResponse['data'] != null ? [jsonResponse['data']] : [];
+        });
+      } else {
+        throw Exception('Failed to load search results');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
 
-  String? selectedShop;
-  List<String> shop = ["Shop 1", "Shop 2", "Shop 3", "Shop 4", "Shop 5"];
-
-  String? selectedAssets;
-  List<String> assets = ["1001","1002","1003","2001","2001","2003","3009","4002","4006","5003"];
-
-  String? selectedStatus;
-  List<String> status = ["Unpaid", "Paid", "Partly Paid"];
+  @override
+  void dispose() {
+    // Dispose of controllers when the widget is removed from the tree
+    _firstNameController.dispose();
+    _shopIdController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -272,104 +298,20 @@ class _RentReportPageState extends State<RentReportPage> {
                       children: [
                         SizedBox(height: 10,),
                         Text("Search", style: TextStyle(fontSize: 25)),
-                        SizedBox(height: 20),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: "Search by Date",
-                            border: OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.calendar_today),
-                              onPressed: () async {
-                                final DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2101),
-                                );
-                                if (pickedDate != null && pickedDate != _Date) {
-                                  setState(() {
-                                    _Date = pickedDate;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          readOnly: true,
-                          controller: TextEditingController(
-                            text: _Date != null
-                                ? '${_Date!.day}/${_Date!.month}/${_Date!.year}'
-                                : '',
-                          ),
-                        ),
                         SizedBox(height: 10,),
                         TextField(
+                          controller: _firstNameController,
                           decoration: InputDecoration(
                               labelText: "Search by Vender",
                               border: OutlineInputBorder()
                           ),
                         ),
                         SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedTenant,
-                          items: tenant.map((tenant) {
-                            return DropdownMenuItem<String>(
-                              value: tenant,
-                              child: Text(tenant),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedTenant = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Vender",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10,),
                         TextField(
+                          controller: _shopIdController,
                           decoration: InputDecoration(
                               labelText: "Search by Shop",
                               border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedShop,
-                          items: shop.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedShop = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Shop",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedStatus,
-                          items: status.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedStatus = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Status",
-                            border: OutlineInputBorder(),
                           ),
                         ),
                         SizedBox(height: 20,),
@@ -386,30 +328,79 @@ class _RentReportPageState extends State<RentReportPage> {
                                             borderRadius: BorderRadius.circular(5)
                                         )
                                     ),
-                                    onPressed: (){}, child: Text("Submit")))),
-                            SizedBox(width: 50,),
-                            Expanded(child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.teal.shade900,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(5)
-                                    )
-                                ),
-                                onPressed: (){},
-                                child: Text("View All")),)
+                                    onPressed: ()async{
+                                      await _searchVendor(
+                                        _firstNameController.text,
+                                        _shopIdController.text,
+                                      );
+                                    }, child: Text("Submit")))),
                           ],
                         )
                       ],
                     )
                 ),
-              ],
-            ),
+        SizedBox(height: 20), // Add some spacing between sections
+        SizedBox(
+          height: 300, // Set a fixed height to limit the height of the second ListView
+          child: ListView.builder(
+            itemCount: _searchVendors.length,
+            itemBuilder: (context, index) {
+              return Card(
+                child: ListTile(
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Name: ${_searchVendors[index]['firstName'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Mobile Number: ${_searchVendors[index]['mobileNumber'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Address: ${_searchVendors[index]['permanentAddress'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "State: ${_searchVendors[index]['selectedState'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Shop Id: ${_searchVendors[index]['shopId'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Shop Deposit: ${_searchVendors[index]['shopRent'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Total Asset: ${_searchVendors[index]['totalAsset'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Asset List: ${_searchVendors[index]['assetList'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        "Asset Rent: ${_searchVendors[index]['assetRentAmount'] ?? ''}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
+      ],
+    ),
+    )
+    ),
       ),
     );
   }
 }
+
 
 

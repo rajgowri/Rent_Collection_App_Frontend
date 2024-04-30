@@ -43,7 +43,6 @@ class _RegisterPageState extends State<RegisterPage> {
         );
       }
     } catch (error) {
-      // If registration fails due to user already existing, show appropriate error message
       if (error.toString().contains("User already exists")) {
         showDialog(
           context: context,
@@ -61,7 +60,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         );
       } else {
-        // If registration fails due to other reasons, show generic error message
         showDialog(
           context: context,
           builder: (context) => AlertDialog(

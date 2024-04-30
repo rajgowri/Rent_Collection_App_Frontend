@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
 import 'package:rent_collection_app/Services/UserApiService.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key});
@@ -13,21 +12,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _showpassword = false;
   String errorMessage = '';
   bool showSuccessMessage = false;
-  //late SharedPreferences _prefs;
-  //final String userId="";
-
-  //@override
-  //void initState() {
-    //super.initState();
-    //_initPrefs();
-  //}
-
-  //void _initPrefs() async {
-    //_prefs = await SharedPreferences.getInstance();
-  //}
 
 
   void sendValuesToApi() async {
@@ -38,8 +24,6 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (responseData["status"] == "success" && responseData["message"] == "authentification successfull") {
-        //print(userId);
-        //_prefs.setString('userId', responseData['userId']);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => Overview()),

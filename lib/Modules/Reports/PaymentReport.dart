@@ -25,7 +25,7 @@ class _PaymentReportPageState extends State<PaymentReportPage> {
   bool _isDrawerOpen = false;
 
   String? selectedCategory;
-  List<String> category = ["Deposit", "Rent", "Expense", "Others"];
+  List<String> category = ["Deposit", "Rent"];
 
   String? selectedMethod;
   List<String> method = ["Cash", "Online"];

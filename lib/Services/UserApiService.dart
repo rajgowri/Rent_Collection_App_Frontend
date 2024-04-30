@@ -6,7 +6,7 @@ class UserApiService {
   Future<dynamic> registerUser(String firstName, String lastName,
       String emailAddress, String mobileNumber, String password) async {
     var client = http.Client();
-    var apiUrl = Uri.parse("http://192.168.174.136:3001/user/signup");
+    var apiUrl = Uri.parse("http://192.168.88.136:3001/user/signup");
     try {
       var response = await client.post(
         apiUrl,
@@ -42,14 +42,14 @@ class UserApiService {
     } catch (error) {
       throw Exception("Failed to register user: $error");
     } finally {
-      client.close(); // Close the client connection
+      client.close();
     }
   }
 
 
   Future<dynamic> loginUser(String emailAddress, String password) async {
     var client = http.Client();
-    var apiUrl = Uri.parse("http://192.168.174.136:3001/user/signin");
+    var apiUrl = Uri.parse("http://192.168.88.136:3001/user/signin");
     try {
       var response = await client.post(
         apiUrl,

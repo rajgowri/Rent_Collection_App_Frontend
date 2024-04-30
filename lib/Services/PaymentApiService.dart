@@ -9,7 +9,7 @@ class PaymentApiService {
       String referenceId,
       DateTime selectedDate) async {
     var client = http.Client();
-    var apiUrl = Uri.parse("http://192.168.174.136:3001/payment/add");
+    var apiUrl = Uri.parse("http://192.168.88.136:3001/payment/add");
     try {
       var response = await client.post(
         apiUrl,

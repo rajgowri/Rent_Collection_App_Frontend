@@ -26,7 +26,7 @@ class _PaymentsPageState extends State<PaymentsPage> {
   bool _isDrawerOpen = false;
 
   String? selectedCategory;
-  List<String> category = ["Deposit", "Rent", "Expense", "Others"];
+  List<String> category = ["Deposit", "Rent"];
 
   String? selectedMethod;
   List<String> method = ["Cash", "Online"];
@@ -316,18 +316,6 @@ class _PaymentsPageState extends State<PaymentsPage> {
                           },
                           decoration: InputDecoration(
                             labelText: "Select Method",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        TextField(
-                          onChanged: (value) {
-                            setState(() {
-                              note = value;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Note",
                             border: OutlineInputBorder(),
                           ),
                         ),

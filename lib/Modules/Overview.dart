@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:rent_collection_app/Modules/HomePage.dart';
 import 'package:rent_collection_app/Modules/Payments/Categories.dart';
 import 'package:rent_collection_app/Modules/Payments/Payments.dart';
@@ -24,22 +26,112 @@ class _OverviewState extends State<Overview> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
+  String totalAssets = '0';
+  String totalRent = '0';
+  String totalDeposite = '0';
+  String totalIncome = '0';
+  String totalShops = '0';
+  String totalVenders = '0';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  void fetchData() async {
+    try {
+      // Fetch total assets
+      final assetsResponse = await http.post(
+        Uri.parse("http://192.168.88.136:3001/vendor/total"),
+      );
+
+      if (assetsResponse.statusCode == 200) {
+        Map<String, dynamic> assetsData = json.decode(assetsResponse.body);
+        setState(() {
+          totalAssets = assetsData['total'].toString();
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+
+      final rentResponse = await http.post(
+        Uri.parse("http://192.168.88.136:3001/vendor/totalRent"),
+      );
+
+      if (rentResponse.statusCode == 200) {
+        Map<String, dynamic> rentData = json.decode(rentResponse.body);
+        setState(() {
+          totalRent = rentData['total'].toString();
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+
+      // Fetch total deposit
+      final depositResponse = await http.post(
+        Uri.parse("http://192.168.88.136:3001/vendor/totalDeposite"),
+      );
+
+      if (depositResponse.statusCode == 200) {
+        Map<String, dynamic> depositData = json.decode(depositResponse.body);
+        setState(() {
+          totalDeposite = depositData['total'].toString();
+          // Calculate total income
+          totalIncome =
+              (int.parse(totalRent) + int.parse(totalDeposite)).toString();
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+
+      final shopsResponse = await http.post(
+        Uri.parse("http://192.168.88.136:3001/shop/number"),
+      );
+
+      if (shopsResponse.statusCode == 200) {
+        Map<String, dynamic> shopsData = json.decode(shopsResponse.body);
+        setState(() {
+          totalShops = shopsData['totalShops'].toString(); // Update totalShops with fetched value
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+
+      final venderResponse = await http.post(
+        Uri.parse("http://192.168.88.136:3001/vendor/number"), // Corrected endpoint URL
+      );
+
+      if (venderResponse.statusCode == 200) { // Fixed typo: changed shopsResponse to venderResponse
+        Map<String, dynamic> venderData = json.decode(venderResponse.body); // Changed variable name to venderData
+        setState(() {
+          totalVenders = venderData['totalVendors'].toString(); // Update totalVenders with fetched value
+        });
+      } else {
+        throw Exception('Failed to load data');
+      }
+
+    } catch (error) {
+      print(error);
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
           List<Map<String, dynamic>> data = [
             {
-              "title": "0",
+              "title": totalVenders,
               "subtitle": "Vender",
               "trailing": Icon(Icons.person, color: Colors.teal, size: 35)
             },
             {
-              "title": "0",
+              "title": totalShops,
               "subtitle": "Shops",
               "trailing": Icon(Icons.home, color: Colors.teal, size: 35)
             },
             {
-              "title": "0",
+              "title": totalAssets,
               "subtitle": "Assets",
               "trailing": Icon(
                   Icons.table_restaurant_rounded, color: Colors.teal, size: 35)
@@ -50,29 +142,22 @@ class _OverviewState extends State<Overview> {
             {
               "leading": CircleAvatar(
                   backgroundColor: Colors.teal,
+                  child: Icon(Icons.currency_rupee, color: Colors.white)),
+              "title": "$totalDeposite Rs",
+              "subtitle": "Total Deposit"
+            },
+            {
+              "leading": CircleAvatar(
+                  backgroundColor: Colors.teal,
                   child: Icon(Icons.currency_rupee, color: Colors.white,)),
-              "title": "0 Rs",
-              "subtitle": "Total Due"
-            },
-            {
-              "leading": CircleAvatar(
-                  backgroundColor: Colors.teal,
-                  child: Icon(Icons.currency_rupee, color: Colors.white)),
-              "title": "0 Rs",
-              "subtitle": "Total Paid"
-            },
-            {
-              "leading": CircleAvatar(
-                  backgroundColor: Colors.teal,
-                  child: Icon(Icons.currency_rupee, color: Colors.white)),
-              "title": "0 Rs",
+              "title": "$totalIncome Rs", // Update title with totalIncome value
               "subtitle": "Total Income"
             },
             {
               "leading": CircleAvatar(
                   backgroundColor: Colors.teal,
                   child: Icon(Icons.currency_rupee, color: Colors.white)),
-              "title": "0 Rs",
+              "title": "$totalRent Rs",
               "subtitle": "Total Rent"
             },
           ];
