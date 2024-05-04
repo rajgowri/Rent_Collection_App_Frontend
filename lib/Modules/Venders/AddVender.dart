@@ -11,7 +11,6 @@ import 'package:rent_collection_app/Modules/Reports/Deposit.dart';
 import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 import 'package:rent_collection_app/Services/VenderApiService.dart';
 
 class AddPage extends StatefulWidget {
@@ -28,7 +27,7 @@ class _AddPageState extends State<AddPage> {
   final TextEditingController _mobileNumber = TextEditingController();
   final TextEditingController _firstName = TextEditingController();
   final TextEditingController _lastName = TextEditingController();
-  final TextEditingController _temporaryAddress = TextEditingController();
+  final TextEditingController _mailAddress = TextEditingController();
   final TextEditingController _permanentAddress = TextEditingController();
   final TextEditingController _city = TextEditingController();
   String? _selectedState;
@@ -46,26 +45,11 @@ class _AddPageState extends State<AddPage> {
   final TextEditingController _leaseEndDate = TextEditingController();
   bool showSuccessMessage = false;
 
-  // Future<void> fetchShopIds() async {
-  //   try {
-  //     shopIds = await ShopApiService().fetchShopIds();
-  //     setState(() {});
-  //   } catch (error) {
-  //     print("Failed to fetch shop IDs: $error");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text("Failed to fetch shop IDs: $error"),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //   }
-  // }
-
   Future<void> addVender() async {
     final String mobileNumber = _mobileNumber.text;
     final String firstName = _firstName.text;
     final String lastName = _lastName.text;
-    final String temporaryAddress = _temporaryAddress.text;
+    final String mailAddress = _mailAddress.text;
     final String permanentAddress = _permanentAddress.text;
     final String city = _city.text;
     final String selectedState = _selectedState!;
@@ -88,7 +72,7 @@ class _AddPageState extends State<AddPage> {
           mobileNumber,
           firstName,
           lastName,
-          temporaryAddress,
+          mailAddress,
           permanentAddress,
           city,
           selectedState,
@@ -113,7 +97,7 @@ class _AddPageState extends State<AddPage> {
           _mobileNumber.clear();
           _firstName.clear();
           _lastName.clear();
-          _temporaryAddress.clear();
+          _mailAddress.clear();
           _permanentAddress.clear();
           _city.clear();
           _selectedState = null;
@@ -336,12 +320,6 @@ class _AddPageState extends State<AddPage> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -429,9 +407,9 @@ class _AddPageState extends State<AddPage> {
                               ),
                               SizedBox(height: 10),
                               TextField(
-                                controller: _temporaryAddress,
+                                controller: _mailAddress,
                                 decoration: InputDecoration(
-                                  labelText: "Temporary Address",
+                                  labelText: "Email Address",
                                   border: OutlineInputBorder(),
                                 ),
                               ),

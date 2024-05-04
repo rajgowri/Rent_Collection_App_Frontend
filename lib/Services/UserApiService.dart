@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:rent_collection_app/Models/ChangePswdModel.dart';
 
 class UserApiService {
   Future<dynamic> registerUser(String firstName, String lastName,
@@ -76,7 +75,7 @@ class UserApiService {
     }
   }
 
-  Future<dynamic>SendUsername(String firstName)async
+  Future<dynamic>SendUsername(String email,String firstName)async
   {
     var client=http.Client();
     var apiurl=Uri.parse("");
@@ -87,6 +86,7 @@ class UserApiService {
         },
         body: jsonEncode(<String,String>
         {
+          "email":email,
           "firstName":firstName
         })
     );
@@ -99,9 +99,9 @@ class UserApiService {
       throw Exception("Failed to send data");
     }
   }
-  Future<dynamic> changePswd(String oldPassword, String newPassword, String emailAddress) async {
+  Future<dynamic> changePswd(String oldPassword, String newPassword, String id) async {
     var client = http.Client();
-    var apiUrl = Uri.parse("");
+    var apiUrl = Uri.parse("http://192.168.88.136:3001/user/changePassword");
     try {
       var response = await client.post(
         apiUrl,
@@ -109,7 +109,7 @@ class UserApiService {
           "Content-Type": "application/json; charset=UTF-8"
         },
         body: jsonEncode(<String, String>{
-          "emailAddress": emailAddress,
+          "id": id,
           "oldPassword": oldPassword,
           "newPassword": newPassword
         }),

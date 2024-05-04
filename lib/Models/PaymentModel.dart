@@ -1,6 +1,6 @@
 class PaymentDetails {
   String? category;
-  double? amount;
+  int? amount;
   String? method;
   String? referenceId;
   DateTime? paymentDate;
@@ -26,7 +26,7 @@ class PaymentDetails {
   factory PaymentDetails.fromJson(Map<String, dynamic> json) {
     return PaymentDetails(
       category: json['category'] as String,
-      amount: json['amount'] as double,
+      amount: int.tryParse(json['amount'].toString()),
       method: json['method'] as String,
       referenceId: json['referenceId'] as String,
       paymentDate: json['paymentDate'] != null ? DateTime.parse(json['paymentDate']) : null,

@@ -11,7 +11,6 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 import 'package:rent_collection_app/Services/ShopApiService.dart';
 
 class DeleteShopsPage extends StatefulWidget {
@@ -50,7 +49,7 @@ class _DeleteShopsPageState extends State<DeleteShopsPage> {
 
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
     ];
@@ -215,12 +214,6 @@ class _DeleteShopsPageState extends State<DeleteShopsPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => AddPage()),
-                          );
-                        }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
                           );
                         }
                         else if (newValue == "Add Shop") {

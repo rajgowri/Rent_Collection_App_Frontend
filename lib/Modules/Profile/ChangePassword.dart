@@ -11,7 +11,6 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 import 'package:rent_collection_app/Services/UserApiService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,7 +28,7 @@ class _ChangePswdState extends State<ChangePswd> {
   final TextEditingController _oldPasswordController = TextEditingController();
   final TextEditingController _newPasswordController = TextEditingController();
   bool _isButtonEnabled = false;
-  String? _userEmail;
+  String? userId;
   String _message = '';
 
   @override
@@ -37,7 +36,7 @@ class _ChangePswdState extends State<ChangePswd> {
     super.initState();
     _oldPasswordController.addListener(_checkTextField);
     _newPasswordController.addListener(_checkTextField);
-    _loadUserData();
+    sendValuesToApi();
   }
 
   @override
@@ -54,18 +53,18 @@ class _ChangePswdState extends State<ChangePswd> {
     });
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> sendValuesToApi() async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
-      _userEmail = preferences.getString("userEmail");
+      userId = preferences.getString("userId");
     });
   }
 
   void changePassword() async {
     final response = await UserApiService().changePswd(
-      _userEmail.toString(),
       _oldPasswordController.text,
       _newPasswordController.text,
+      userId.toString(),
     );
     if (response['status'] == 'success') {
       setState(() {
@@ -83,7 +82,7 @@ class _ChangePswdState extends State<ChangePswd> {
 
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
     ];
@@ -248,12 +247,6 @@ class _ChangePswdState extends State<ChangePswd> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(builder: (context) => AddPage()),
-                          );
-                        }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
                           );
                         }
                         else if (newValue == "Add Shop") {

@@ -1,6 +1,3 @@
-// To parse this JSON data, do
-//
-//     final search = searchFromJson(jsonString);
 
 import 'dart:convert';
 
@@ -40,6 +37,7 @@ class Data {
   String pinCode;
   String emergencyContactNumber;
   String shopId;
+  int shopRent;
   int totalAsset;
   List<String> assetList;
   int depositeAmount;
@@ -62,6 +60,7 @@ class Data {
     required this.pinCode,
     required this.emergencyContactNumber,
     required this.shopId,
+    required this.shopRent,
     required this.totalAsset,
     required this.assetList,
     required this.depositeAmount,
@@ -85,6 +84,7 @@ class Data {
     pinCode: json["pinCode"],
     emergencyContactNumber: json["emergencyContactNumber"],
     shopId: json["shopId"],
+    shopRent: json["shopRent"],
     totalAsset: json["totalAsset"],
     assetList: List<String>.from(json["assetList"].map((x) => x)),
     depositeAmount: json["depositeAmount"],
@@ -108,6 +108,7 @@ class Data {
     "pinCode": pinCode,
     "emergencyContactNumber": emergencyContactNumber,
     "shopId": shopId,
+    "shopRent": shopRent,
     "totalAsset": totalAsset,
     "assetList": List<dynamic>.from(assetList.map((x) => x)),
     "depositeAmount": depositeAmount,

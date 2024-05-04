@@ -4,7 +4,7 @@ import 'package:rent_collection_app/Models/ShopModel.dart';
 import 'package:rent_collection_app/Services/ShopApiService.dart';
 
 class ShopApiService {
-  Future<dynamic> addShop(String shopId, String shopAddress, String shopRent) async{
+  Future<dynamic> addShop(String shopId) async{
     var client = http.Client();
     var apiUrl = Uri.parse("http://192.168.88.136:3001/shop/add");
     try {
@@ -15,8 +15,6 @@ class ShopApiService {
         },
         body: jsonEncode(<String, String>{
           'shopId': shopId,
-          'shopAddress': shopAddress,
-          'shopRent': shopRent,
         }),
       );
       if (response.statusCode == 200) {

@@ -11,7 +11,6 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 import 'package:rent_collection_app/Services/ShopApiService.dart';
 
 class AddShopsPage extends StatefulWidget {
@@ -28,20 +27,14 @@ class _AddShopsPageState extends State<AddShopsPage> {
 
   bool _isDrawerOpen = false;
   final _shopIdController = TextEditingController();
-  final _shopAddressController = TextEditingController();
-  final _shopRentController = TextEditingController();
   bool showSuccessMessage = false;
 
   Future<void> addShop() async {
     final String shopId = _shopIdController.text;
-    final String shopAddress = _shopAddressController.text;
-    final String shopRent = _shopRentController.text;
 
 
     final response = await ShopApiService().addShop(
       shopId,
-      shopAddress,
-      shopRent,
     );
 
     if (response['success']) {
@@ -49,8 +42,6 @@ class _AddShopsPageState extends State<AddShopsPage> {
         showSuccessMessage = true;
         print(response['message']);
         _shopIdController.clear();
-        _shopAddressController.clear();
-        _shopRentController.clear();
       }
         );
       }
@@ -65,7 +56,7 @@ class _AddShopsPageState extends State<AddShopsPage> {
 
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
     ];
@@ -232,12 +223,6 @@ class _AddShopsPageState extends State<AddShopsPage> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -293,22 +278,6 @@ class _AddShopsPageState extends State<AddShopsPage> {
                           controller: _shopIdController,
                           decoration: InputDecoration(
                               labelText: "Shop id",
-                              border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          controller: _shopAddressController,
-                          decoration: InputDecoration(
-                              labelText: "Shop Address",
-                              border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          controller: _shopRentController,
-                          decoration: InputDecoration(
-                              labelText: "Shop Rent",
                               border: OutlineInputBorder()
                           ),
                         ),

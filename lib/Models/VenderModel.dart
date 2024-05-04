@@ -2,7 +2,7 @@ class AddPageData {
   String? mobileNumber;
   String? firstName;
   String? lastName;
-  String? temporaryAddress;
+  String? mailAddress;
   String? permanentAddress;
   String? city;
   String? selectedState;
@@ -12,7 +12,7 @@ class AddPageData {
   int? totalAsset;
   double? shopRent;
   List<String>? assetList;
-  double? depositAmount;
+  double? depositeAmount;
   double? assetRentAmount;
   String? selectedPayment;
   String? paymentReferenceId;
@@ -23,7 +23,7 @@ class AddPageData {
     this.mobileNumber,
     this.firstName,
     this.lastName,
-    this.temporaryAddress,
+    this.mailAddress,
     this.permanentAddress,
     this.city,
     this.selectedState,
@@ -33,7 +33,7 @@ class AddPageData {
     this.totalAsset,
     this.shopRent,
     this.assetList,
-    this.depositAmount,
+    this.depositeAmount,
     this.assetRentAmount,
     this.selectedPayment,
     this.paymentReferenceId,
@@ -47,7 +47,7 @@ class AddPageData {
       'mobileNumber': mobileNumber,
       'firstName': firstName,
       'lastName': lastName,
-      'temporaryAddress': temporaryAddress,
+      'mailAddress': mailAddress,
       'permanentAddress': permanentAddress,
       'city': city,
       'selectedState': selectedState,
@@ -57,7 +57,7 @@ class AddPageData {
       'totalAsset': totalAsset,
       'shopRent' : shopRent,
       'assetList': assetList,
-      'depositAmount': depositAmount,
+      'depositeAmount': depositeAmount,
       'assetRentAmount': assetRentAmount,
       'selectedPayment': selectedPayment,
       'paymentReferenceId': paymentReferenceId,
@@ -72,7 +72,7 @@ class AddPageData {
       mobileNumber: json['mobileNumber'],
       firstName: json['firstName'],
       lastName: json['lastName'],
-      temporaryAddress: json['temporaryAddress'],
+      mailAddress: json['mailAddress'],
       permanentAddress: json['permanentAddress'],
       city: json['city'],
       selectedState: json['selectedState'],
@@ -82,7 +82,7 @@ class AddPageData {
       totalAsset: json['totalAsset'],
       shopRent : json['shopRent'],
       assetList: json['assetList'] != null ? List<String>.from(json['assetList']) : null,
-      depositAmount: json['depositAmount'],
+      depositeAmount: json['depositeAmount'],
       assetRentAmount: json['assetRentAmount'],
       selectedPayment: json['selectedPayment'],
       paymentReferenceId: json['paymentReferenceId'],

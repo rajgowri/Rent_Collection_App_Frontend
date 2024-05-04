@@ -14,7 +14,6 @@ import 'package:rent_collection_app/Modules/Reports/Deposit.dart';
 import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 
 
 class RentReportPage extends StatefulWidget {
@@ -34,7 +33,6 @@ class _RentReportPageState extends State<RentReportPage> {
 
   Future<void> _searchVendor(String firstName, String shopId) async {
     try {
-      // Construct the request body
       final Map<String, dynamic> requestBody = {
         'firstName': firstName,
         'shopId': shopId,
@@ -49,10 +47,8 @@ class _RentReportPageState extends State<RentReportPage> {
       );
 
       if (response.statusCode == 200) {
-        // Parse the response JSON
         final jsonResponse = json.decode(response.body);
         setState(() {
-          // Extract the search results from the response
           _searchVendors = jsonResponse['data'] != null ? [jsonResponse['data']] : [];
         });
       } else {
@@ -65,7 +61,6 @@ class _RentReportPageState extends State<RentReportPage> {
 
   @override
   void dispose() {
-    // Dispose of controllers when the widget is removed from the tree
     _firstNameController.dispose();
     _shopIdController.dispose();
     super.dispose();
@@ -75,7 +70,7 @@ class _RentReportPageState extends State<RentReportPage> {
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
     ];
@@ -242,12 +237,6 @@ class _RentReportPageState extends State<RentReportPage> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -363,7 +352,7 @@ class _RentReportPageState extends State<RentReportPage> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        "State: ${_searchVendors[index]['selectedState'] ?? ''}",
+                        "Email: ${_searchVendors[index]['temporaryAddress'] ?? ''}",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
@@ -371,15 +360,7 @@ class _RentReportPageState extends State<RentReportPage> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        "Shop Deposit: ${_searchVendors[index]['shopRent'] ?? ''}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        "Total Asset: ${_searchVendors[index]['totalAsset'] ?? ''}",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        "Asset List: ${_searchVendors[index]['assetList'] ?? ''}",
+                        "Shop Rent: ${_searchVendors[index]['shopRent'] ?? ''}",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(

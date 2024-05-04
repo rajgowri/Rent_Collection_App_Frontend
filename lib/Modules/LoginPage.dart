@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
 import 'package:rent_collection_app/Services/UserApiService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key});
@@ -24,6 +25,15 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (responseData["status"] == "success" && responseData["message"] == "authentification successfull") {
+        dynamic userData = responseData["data"];
+        String userId = userData["_id"].toString();
+        String userEmail = userData["userdata"]["email"].toString();
+        String userName = userData["userdata"]["name"].toString();
+        print(userId);
+        SharedPreferences preferences = await SharedPreferences.getInstance();
+        preferences.setString("userId", userId);
+        preferences.setString("userEmail", userEmail); // Store email ID
+        preferences.setString("userName", userName);
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => Overview()),

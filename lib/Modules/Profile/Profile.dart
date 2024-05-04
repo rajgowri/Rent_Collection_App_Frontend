@@ -11,7 +11,8 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
+import 'package:rent_collection_app/Services/UserApiService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -24,14 +25,45 @@ class _ProfileState extends State<Profile> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  TextEditingController _firstName = TextEditingController();
-  TextEditingController _lastName = TextEditingController();
-  TextEditingController _emailAddress = TextEditingController();
+  final TextEditingController _firstName = TextEditingController();
+  bool _isButtonEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    sendValuesToApi();
+    _firstName.addListener(_checkTextField);
+  }
 
   void _resetFields() {
     _firstName.clear();
-    _lastName.clear();
-    _emailAddress.clear();
+  }
+
+  void _checkTextField() {
+    setState(() {
+      _isButtonEnabled = _firstName.text.isNotEmpty;
+    });
+  }
+
+  String? _userEmail;
+  Future<void> sendValuesToApi() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    setState(() {
+      _userEmail = preferences.getString("userEmail");
+      print(_userEmail);
+      print("...................................");
+    });
+  }
+
+  void changeuname() async {
+    final response = await UserApiService().SendUsername(_userEmail.toString(), _firstName.text);
+    if (response['status'] == 'success') {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      await preferences.setString("userName", _firstName.text); // Update the username in shared preferences
+      Navigator.pop(context, _firstName.text); // Pass the new username back to the previous page
+    }
+    print(response);
+    print("........................................");
   }
 
   @override
@@ -39,7 +71,7 @@ class _ProfileState extends State<Profile> {
 
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Asset Rent", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.file_copy_rounded,color: Colors.black,),"title": "Invoice", "options": ["Pending Invoices", "Paid Invoices"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
@@ -207,12 +239,6 @@ class _ProfileState extends State<Profile> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -261,22 +287,6 @@ class _ProfileState extends State<Profile> {
                       border: OutlineInputBorder()
                   ),
                 ),
-                SizedBox(height: 10,),
-                TextField(
-                  controller: _lastName,
-                  decoration: InputDecoration(
-                      labelText: "Last Name",
-                      border: OutlineInputBorder()
-                  ),
-                ),
-                SizedBox(height: 10,),
-                TextField(
-                  controller: _emailAddress,
-                  decoration: InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder()
-                  ),
-                ),
                 SizedBox(height: 20,),
                 Row(
                   children: [
@@ -291,7 +301,8 @@ class _ProfileState extends State<Profile> {
                                     borderRadius: BorderRadius.circular(5)
                                 )
                             ),
-                            onPressed: (){}, child: Text("Update",style: TextStyle(fontSize: 17),))),
+                            onPressed: _isButtonEnabled ? changeuname : null,
+                            child: Text("Update",style: TextStyle(fontSize: 17),))),
                     SizedBox(width: 80,),
                     Expanded(
                       child: SizedBox(

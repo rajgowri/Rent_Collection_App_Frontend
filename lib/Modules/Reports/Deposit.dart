@@ -14,7 +14,6 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 
 class DepositReportPage extends StatefulWidget {
   const DepositReportPage({super.key});
@@ -33,7 +32,6 @@ class _DepositReportPageState extends State<DepositReportPage> {
 
   Future<void> _searchVendor(String firstName, String shopId) async {
     try {
-      // Construct the request body
       final Map<String, dynamic> requestBody = {
         'firstName': firstName,
         'shopId': shopId,
@@ -48,10 +46,8 @@ class _DepositReportPageState extends State<DepositReportPage> {
       );
 
       if (response.statusCode == 200) {
-        // Parse the response JSON
         final jsonResponse = json.decode(response.body);
         setState(() {
-          // Extract the search results from the response
           _searchVendors = jsonResponse['data'] != null ? [jsonResponse['data']] : [];
         });
       } else {
@@ -64,7 +60,6 @@ class _DepositReportPageState extends State<DepositReportPage> {
 
   @override
   void dispose() {
-    // Dispose of controllers when the widget is removed from the tree
     _firstNameController.dispose();
     _shopIdController.dispose();
     super.dispose();
@@ -81,7 +76,7 @@ class _DepositReportPageState extends State<DepositReportPage> {
       {
         "leading": Icon(Icons.person, color: Colors.black,),
         "title": "Vender",
-        "options": ["Add", "Message"]
+        "options": ["Add"]
       },
       {
         "leading": Icon(Icons.area_chart, color: Colors.black,),
@@ -272,13 +267,6 @@ class _DepositReportPageState extends State<DepositReportPage> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -402,7 +390,7 @@ class _DepositReportPageState extends State<DepositReportPage> {
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                "State: ${_searchVendors[index]['selectedState'] ?? ''}",
+                                "Email: ${_searchVendors[index]['temporaryAddress'] ?? ''}",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                               Text(
@@ -411,18 +399,6 @@ class _DepositReportPageState extends State<DepositReportPage> {
                               ),
                               Text(
                                 "Shop Deposit: ${_searchVendors[index]['depositeAmount'] ?? ''}",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "Total Asset: ${_searchVendors[index]['totalAsset'] ?? ''}",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "Asset List: ${_searchVendors[index]['assetList'] ?? ''}",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "Asset Rent: ${_searchVendors[index]['assetRentAmount'] ?? ''}",
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ],

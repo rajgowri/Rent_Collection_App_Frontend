@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:rent_collection_app/Modules/HomePage.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
 import 'package:rent_collection_app/Modules/Payments/Categories.dart';
@@ -11,7 +13,6 @@ import 'package:rent_collection_app/Modules/Reports/Deposit.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 
 class PaymentReportPage extends StatefulWidget {
   const PaymentReportPage({Key? key}) : super(key: key);
@@ -33,11 +34,84 @@ class _PaymentReportPageState extends State<PaymentReportPage> {
   String? searchQuery;
   String? note;
 
+  TextEditingController referenceController = new TextEditingController();
+  TextEditingController categoryController = new TextEditingController();
+  TextEditingController methodController = new TextEditingController();
+  List<dynamic> _searchResult = [];
+
+  Future<void> _searchPayment(String? category, String? method, String? referenceId) async {
+    try {
+      final Map<String, dynamic> requestBody = {};
+
+      if (category != null) {
+        requestBody['category'] = category;
+      }
+      if (method != null) {
+        requestBody['method'] = method;
+      }
+      if (referenceId != null) {
+        requestBody['referenceId'] = referenceId;
+      }
+
+      final response = await http.post(
+        Uri.parse('http://192.168.88.136:3001/payment/search'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        setState(() {
+          if (jsonResponse['data'] != null) {
+            if (jsonResponse['data'] is List) {
+              _searchResult = jsonResponse['data'];
+            } else {
+              _searchResult = [jsonResponse['data']];
+            }
+          } else {
+            _searchResult = [];
+          }
+        });
+      } else {
+        throw Exception('Failed to load search results');
+      }
+    } catch (e) {
+      print('Error: $e');
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Failed to search payments. Please try again later.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    referenceController.clear();
+    categoryController.clear();
+    methodController.clear();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
     ];
@@ -208,12 +282,6 @@ class _PaymentReportPageState extends State<PaymentReportPage> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -264,6 +332,14 @@ class _PaymentReportPageState extends State<PaymentReportPage> {
                       SizedBox(height: 10),
                       Text("Search", style: TextStyle(fontSize: 25)),
                       SizedBox(height: 20),
+                      TextField(
+                        controller: referenceController,
+                        decoration: InputDecoration(
+                            labelText: "Search by Reference Id",
+                            border: OutlineInputBorder()
+                        ),
+                      ),
+                      SizedBox(height: 20,),
                       DropdownButtonFormField<String>(
                         value: selectedCategory,
                         items: category.map((state) {
@@ -333,28 +409,54 @@ class _PaymentReportPageState extends State<PaymentReportPage> {
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                 ),
-                                onPressed: () {},
-                                child: Text("Submit"),
+                                onPressed: () async{
+                                  await _searchPayment(selectedCategory, selectedMethod, referenceController.text);
+                                },
+                                child: Text("Search"),
                               ),
-                            ),
-                          ),
-                          SizedBox(width: 50),
-                          Expanded(
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.teal.shade900,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                              ),
-                              onPressed: () {},
-                              child: Text("View All"),
                             ),
                           ),
                         ],
                       )
                     ],
+                  ),
+                ),
+                SizedBox(height: 20), // Add some spacing between sections
+                SizedBox(
+                  height: 300, // Set a fixed height to limit the height of the second ListView
+                  child: ListView.builder(
+                    itemCount: _searchResult.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        child: ListTile(
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                 "Category: ${_searchResult[index]['category'] ?? ''}",
+                                 style: TextStyle(fontWeight: FontWeight.bold),
+                               ),
+                               Text(
+                                 "Method: ${_searchResult[index]['method'] ?? ''}",
+                                 style: TextStyle(fontWeight: FontWeight.bold),
+                               ),
+                               Text(
+                                 "Reference Id: ${_searchResult[index]['referenceId'] ?? ''}",
+                                 style: TextStyle(fontWeight: FontWeight.bold),
+                               ),
+                               Text(
+                                 "Payment Date: ${_searchResult[index]['paymentDate'] ?? ''}",
+                                 style: TextStyle(fontWeight: FontWeight.bold),
+                               ),
+                               Text(
+                                 "Amount: ${_searchResult[index]['amount'] ?? ''}",
+                                 style: TextStyle(fontWeight: FontWeight.bold),
+                               ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],

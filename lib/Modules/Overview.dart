@@ -13,7 +13,6 @@ import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Reports/ShopReport.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 
 class Overview extends StatefulWidget {
   const Overview({Key? key}) : super(key: key);
@@ -99,13 +98,13 @@ class _OverviewState extends State<Overview> {
       }
 
       final venderResponse = await http.post(
-        Uri.parse("http://192.168.88.136:3001/vendor/number"), // Corrected endpoint URL
+        Uri.parse("http://192.168.88.136:3001/vendor/number"),
       );
 
-      if (venderResponse.statusCode == 200) { // Fixed typo: changed shopsResponse to venderResponse
-        Map<String, dynamic> venderData = json.decode(venderResponse.body); // Changed variable name to venderData
+      if (venderResponse.statusCode == 200) {
+        Map<String, dynamic> venderData = json.decode(venderResponse.body);
         setState(() {
-          totalVenders = venderData['totalVendors'].toString(); // Update totalVenders with fetched value
+          totalVenders = venderData['totalVendors'].toString();
         });
       } else {
         throw Exception('Failed to load data');
@@ -150,7 +149,7 @@ class _OverviewState extends State<Overview> {
               "leading": CircleAvatar(
                   backgroundColor: Colors.teal,
                   child: Icon(Icons.currency_rupee, color: Colors.white,)),
-              "title": "$totalIncome Rs", // Update title with totalIncome value
+              "title": "$totalIncome Rs",
               "subtitle": "Total Income"
             },
             {
@@ -171,7 +170,7 @@ class _OverviewState extends State<Overview> {
             {
               "leading": Icon(Icons.person, color: Colors.black,),
               "title": "Vender",
-              "options": ["Add", "Message"]
+              "options": ["Add"]
             },
             {
               "leading": Icon(Icons.area_chart, color: Colors.black,),
@@ -363,13 +362,6 @@ class _OverviewState extends State<Overview> {
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => AddPage()),
-                                );
-                              }
-                              else if (newValue == "Message") {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => MessageVender()),
                                 );
                               }
                               else if (newValue == "Add Shop") {

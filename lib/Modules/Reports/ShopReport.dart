@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:rent_collection_app/Modules/HomePage.dart';
 import 'package:rent_collection_app/Modules/Overview.dart';
 import 'package:rent_collection_app/Modules/Payments/Categories.dart';
@@ -11,7 +14,6 @@ import 'package:rent_collection_app/Modules/Reports/Deposit.dart';
 import 'package:rent_collection_app/Modules/Reports/PaymentReport.dart';
 import 'package:rent_collection_app/Modules/Reports/Rent.dart';
 import 'package:rent_collection_app/Modules/Venders/AddVender.dart';
-import 'package:rent_collection_app/Modules/Venders/MessageVender.dart';
 
 class ShopReportPage extends StatefulWidget {
   const ShopReportPage({super.key});
@@ -24,20 +26,48 @@ class _ShopReportPageState extends State<ShopReportPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
 
-  DateTime? _Date;
+  TextEditingController _shopIdController = new TextEditingController();
+  List<dynamic> _searchVendors = [];
 
-  String? selectedShop;
-  List<String> shop = ["Shop 1", "Shop 2", "Shop 3", "Shop 4", "Shop 5"];
+  Future<void> _searchVendor(String shopId) async {
+    try {
+      final Map<String, dynamic> requestBody = {
+        'shopId': shopId,
+      };
 
-  String? selectedStatus;
-  List<String> status = ["Unpaid", "Paid", "Partly Paid"];
+      final response = await http.post(
+        Uri.parse('http://192.168.88.136:3001/vendor/search'),
+        body: json.encode(requestBody),
+        headers: {
+          'Content-Type': 'application/json'
+        }, // Set the content-type header
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        setState(() {
+          _searchVendors = jsonResponse['data'] != null ? [jsonResponse['data']] : [];
+        });
+      } else {
+        throw Exception('Failed to load search results');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _shopIdController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
 
     List<Map<String, dynamic>> data2 = [
       {"leading":Icon(Icons.bar_chart,color: Colors.black,),"title": "Report", "options": ["Rent", "Deposit","Payment Report", "Shop Rent"]},
-      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add", "Message"]},
+      {"leading":Icon(Icons.person,color: Colors.black,),"title": "Vender", "options": ["Add"]},
       {"leading":Icon(Icons.area_chart,color: Colors.black,),"title": "Property", "options": ["Add Shop", "Delete Shop"]},
       {"leading":Icon(Icons.wallet,color: Colors.black,),"title": "Payment", "options": ["Payment", "Categories"]},
     ];
@@ -204,12 +234,6 @@ class _ShopReportPageState extends State<ShopReportPage> {
                             MaterialPageRoute(builder: (context) => AddPage()),
                           );
                         }
-                        else if (newValue == "Message") {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MessageVender()),
-                          );
-                        }
                         else if (newValue == "Add Shop") {
                           Navigator.push(
                             context,
@@ -262,75 +286,9 @@ class _ShopReportPageState extends State<ShopReportPage> {
                         Text("Search", style: TextStyle(fontSize: 25)),
                         SizedBox(height: 20),
                         TextField(
+                          controller: _shopIdController,
                           decoration: InputDecoration(
-                              labelText: "Search by Shop",
-                              border: OutlineInputBorder()
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        TextField(
-                          decoration: InputDecoration(
-                            labelText: "Search by Date",
-                            border: OutlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(Icons.calendar_today),
-                              onPressed: () async {
-                                final DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2101),
-                                );
-                                if (pickedDate != null && pickedDate != _Date) {
-                                  setState(() {
-                                    _Date = pickedDate;
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          readOnly: true,
-                          controller: TextEditingController(
-                            text: _Date != null
-                                ? '${_Date!.day}/${_Date!.month}/${_Date!.year}'
-                                : '',
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedShop,
-                          items: shop.map((subCategory) {
-                            return DropdownMenuItem<String>(
-                              value: subCategory,
-                              child: Text(subCategory),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedShop = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Shop",
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        SizedBox(height: 10,),
-                        DropdownButtonFormField<String>(
-                          value: selectedStatus,
-                          items: status.map((state) {
-                            return DropdownMenuItem<String>(
-                              value: state,
-                              child: Text(state),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              selectedStatus = newValue;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            labelText: "Select Status",
+                            labelText: "Search by Shop",
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -348,22 +306,53 @@ class _ShopReportPageState extends State<ShopReportPage> {
                                             borderRadius: BorderRadius.circular(5)
                                         )
                                     ),
-                                    onPressed: (){}, child: Text("Submit")))),
-                            SizedBox(width: 50,),
-                            Expanded(child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    foregroundColor: Colors.white,
-                                    backgroundColor: Colors.teal.shade900,
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(5)
-                                    )
-                                ),
-                                onPressed: (){},
-                                child: Text("View All")),)
+                                    onPressed: () async {
+                                      await _searchVendor(
+                                        _shopIdController.text,
+                                      );
+                                    }, child: Text("Submit")))),
                           ],
                         )
                       ],
                     )
+                ),
+                SizedBox(height: 20), // Add some spacing between sections
+                SizedBox(
+                  height: 300, // Set a fixed height to limit the height of the second ListView
+                  child: ListView.builder(
+                    itemCount: _searchVendors.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        child: ListTile(
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Shop Id: ${_searchVendors[index]['shopId'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Shop Rent: ${_searchVendors[index]['shopRent'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Shop Deposit: ${_searchVendors[index]['depositeAmount'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Assets: ${_searchVendors[index]['assetList'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                "Vender Name: ${_searchVendors[index]['firstName'] ?? ''}",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),

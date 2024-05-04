@@ -1,6 +1,4 @@
-// To parse this JSON data, do
-//
-//     final shop = shopFromJson(jsonString);
+
 
 import 'dart:convert';
 
@@ -31,31 +29,23 @@ class Shop {
 class Datum {
   String id;
   String shopId;
-  String shopAddress;
-  String shopRent;
   int v;
 
   Datum({
     required this.id,
     required this.shopId,
-    required this.shopAddress,
-    required this.shopRent,
     required this.v,
   });
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
     id: json["_id"],
     shopId: json["shopId"],
-    shopAddress: json["shopAddress"],
-    shopRent: json["shopRent"],
     v: json["__v"],
   );
 
   Map<String, dynamic> toJson() => {
     "_id": id,
     "shopId": shopId,
-    "shopAddress": shopAddress,
-    "shopRent": shopRent,
     "__v": v,
   };
 }
